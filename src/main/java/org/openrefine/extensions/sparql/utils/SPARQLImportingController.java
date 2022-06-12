@@ -14,13 +14,15 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.refine.RefineServlet;
 import com.google.refine.commands.HttpUtilities;
 import com.google.refine.importing.ImportingController;
+import com.google.refine.importing.ImportingJob;
+import com.google.refine.importing.ImportingManager;
 import com.google.refine.util.JSONUtilities;
 import com.google.refine.util.ParsingUtilities;
 
 
 public class SPARQLImportingController implements ImportingController {
 
-    private static final Logger logger = LoggerFactory.getLogger("CommonsImportingController");
+    private static final Logger logger = LoggerFactory.getLogger("SPARQLImportingController");
     protected RefineServlet servlet;
     public static int DEFAULT_PREVIEW_LIMIT = 50;
     public static int DEFAULT_PROJECT_LIMIT = 0;
@@ -51,12 +53,37 @@ public class SPARQLImportingController implements ImportingController {
             logger.info("doPost::subCommand::{}", subCommand);
         }
 
-        if ("initialize-parser-ui".equals(subCommand)) {
+        if ("load-raw-data".equals(subCommand)) {
+            doLoadRawData(request, response, parameters);
+        } else if ("initialize-parser-ui".equals(subCommand)) {
             doInitializeParserUI(request, response, parameters);
         } else {
             HttpUtilities.respond(response, "error", "No such sub command");
         }
 
+    }
+
+    private void doLoadRawData(HttpServletRequest request, HttpServletResponse response, Properties parameters)
+            throws ServletException, IOException {
+
+        long jobID = Long.parseLong(parameters.getProperty("jobID"));
+        ImportingJob job = ImportingManager.getJob(jobID);
+        if (job == null) {
+            HttpUtilities.respond(response, "error", "No such import job");
+            return;
+        }
+
+        job.updating = true;
+        ObjectNode config = job.getOrCreateDefaultConfig();
+        if (!("new".equals(JSONUtilities.getString(config, "state", null)))) {
+            HttpUtilities.respond(response, "error", "Job already started; cannot load more data");
+            return;
+        }
+
+        SPARQLImportingUtilities.loadDataAndPrepareJob(
+                request, response, parameters, job, config);
+        job.touch();
+        job.updating = false;
     }
 
     /**

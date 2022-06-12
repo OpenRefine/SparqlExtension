@@ -65,7 +65,7 @@ Refine.SPARQLImportingController.prototype.startImportJob = function(form, progr
             .attr("accept-charset", "UTF-8")
             .attr("target", "create-project-iframe")
             .attr("action", "command/core/importing-controller?" + $.param({
-            "controller": "core/default-importing-controller",
+            "controller": "sparql/sparql-importing-controller",
             "jobID": jobID,
             "subCommand": "load-raw-data",
             "csrf_token": token
@@ -348,7 +348,7 @@ Refine.SPARQLImportingController.prototype.updateFormatAndOptions = function(opt
   });
 };
 
-Refine.DefaultImportingController.prototype.updateFormatAndOptions = function(options, callback, finallyCallBack) {
+Refine.SPARQLImportingController.prototype.updateFormatAndOptions = function(options, callback, finallyCallBack) {
   var self = this;
   Refine.wrapCSRF(function(token) {
     $.post(
@@ -382,7 +382,7 @@ Refine.DefaultImportingController.prototype.updateFormatAndOptions = function(op
   });
 };
 
-Refine.DefaultImportingController.prototype.getPreviewData = function(callback, numRows) {
+Refine.SPARQLImportingController.prototype.getPreviewData = function(callback, numRows) {
   var self = this;
   var result = {};
 
