@@ -348,40 +348,6 @@ Refine.SPARQLImportingController.prototype.updateFormatAndOptions = function(opt
   });
 };
 
-Refine.SPARQLImportingController.prototype.updateFormatAndOptions = function(options, callback, finallyCallBack) {
-  var self = this;
-  Refine.wrapCSRF(function(token) {
-    $.post(
-      "command/core/importing-controller?" + $.param({
-        "controller": "core/default-importing-controller",
-        "jobID": self._jobID,
-        "subCommand": "update-format-and-options",
-        "csrf_token": token
-      }),
-      {
-        "format" : self._format,
-        "options" : JSON.stringify(options)
-      },
-      function(o) {
-        if (o.status == 'error') {
-          if (o.message) {
-            alert(o.message);
-          } else {
-            var messages = [];
-            $.each(o.errors, function() { messages.push(this.message); });
-            alert(messages.join('\n\n'));
-            }
-            if(finallyCallBack){
-              finallyCallBack();
-            }
-          }
-          callback(o);
-        },
-        "json"
-    ).fail(() => { alert($.i18n('core-index-parser/update-format-failed')); });
-  });
-};
-
 Refine.SPARQLImportingController.prototype.getPreviewData = function(callback, numRows) {
   var self = this;
   var result = {};
@@ -414,3 +380,97 @@ Refine.SPARQLImportingController.prototype.getPreviewData = function(callback, n
   );
 };
 
+Refine.SPARQLImportingController.prototype._createProject = function() {
+  if ((this._formatParserUI) && this._formatParserUI.confirmReadyToCreateProject()) {
+    var projectName = jQueryTrim(this._parsingPanelElmts.projectNameInput[0].value);
+    if (projectName.length === 0) {
+      window.alert($.i18n('core-index-import/warning-name'));
+      this._parsingPanelElmts.projectNameInput.focus();
+      return;
+    }
+
+    var projectTags = $("#tagsInput").val();
+
+    var self = this;
+    var options = this._formatParserUI.getOptions();
+    options.projectName = projectName;
+    options.projectTags = projectTags;
+    Refine.wrapCSRF(function(token) {
+        $.post(
+        "command/core/importing-controller?" + $.param({
+            "controller": "core/default-importing-controller",
+            "jobID": self._jobID,
+            "subCommand": "create-project",
+            "csrf_token": token
+        }),
+        {
+            "format" : self._format,
+            "options" : JSON.stringify(options)
+        },
+        function(o) {
+            if (o.status == 'error') {
+            alert(o.message);
+            return;
+            }
+            
+            var start = new Date();
+            var timerID = window.setInterval(
+            function() {
+                self._createProjectUI.pollImportJob(
+                    start,
+                    self._jobID,
+                    timerID,
+                    function(job) {
+                    return "projectID" in job.config;
+                    },
+                    function(jobID, job) {
+                    Refine.CreateProjectUI.cancelImportingJob(jobID);
+                    document.location = "project?project=" + job.config.projectID;
+                    },
+                    function(job) {
+                    alert($.i18n('core-index-import/errors')+'\n' + Refine.CreateProjectUI.composeErrorMessage(job));
+                    self._onImportJobReady();
+                    }
+                );
+            },
+            1000
+            );
+            self._createProjectUI.showImportProgressPanel($.i18n('core-index-import/creating-proj'), function() {
+            // stop the timed polling
+            window.clearInterval(timerID);
+
+            // explicitly cancel the import job
+            Refine.CreateProjectUI.cancelImportingJob(self._jobID);
+
+            self._createProjectUI.showSourceSelectionPanel();
+            });
+        },
+        "json"
+        );
+    });
+  }
+};
+
+Refine.TagsManager = {};
+Refine.TagsManager.allProjectTags = [];
+
+Refine.TagsManager._getAllProjectTags = function() {
+    var self = this;
+    if (self.allProjectTags.length === 0) {
+        jQuery.ajax({
+             url : "command/core/get-all-project-tags",
+             success : function(result) {
+                 var array = result.tags.sort(function (a, b) {
+                     return a.toLowerCase().localeCompare(b.toLowerCase());
+                     });
+                                
+                 array.map(function(item){
+                     self.allProjectTags.push(item);
+                 });
+                 
+                 },
+                 async : false
+                 });
+        }
+    return self.allProjectTags;
+};

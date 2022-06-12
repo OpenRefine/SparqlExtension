@@ -271,7 +271,7 @@ public class SPARQLImportingUtilities {
             JSONUtilities.safePut(fileRecord, "declaredEncoding", encoding);
             JSONUtilities.safePut(fileRecord, "declaredMimeType", (String) null);
             JSONUtilities.safePut(fileRecord, "format", "text");
-            JSONUtilities.safePut(fileRecord, "fileName", "(clipboard)");
+            JSONUtilities.safePut(fileRecord, "fileName", "sparql");
             JSONUtilities.safePut(fileRecord, "location", ImportingUtilities.getRelativePath(file, rawDataDir));
 
             JSONUtilities.safePut(fileRecord, "size", saveStreamToFile(stream, file, null));
