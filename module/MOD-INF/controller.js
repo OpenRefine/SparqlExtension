@@ -33,7 +33,21 @@ function init() {
       "scripts/index/parsing-panel.js",
       "scripts/index/sparql-source-ui.js",
       "scripts/index/json-parser-ui.js",
-      "scripts/index/wikidata/Sparql.js"
+      "scripts/index/wikidata/Sparql.js",
+      "scripts/index/codemirror.js",
+      "scripts/index/Editor.js",
+      //"scripts/index/fullscreen.js",
+      "scripts/index/getMessage.js",
+      "scripts/index/jquery.js",
+      "scripts/index/placeholder.js",
+      "scripts/index/Rdf.js",
+      "scripts/index/RdfNamespaces.js",
+      "scripts/index/show-hint.js",
+      "scripts/index/sparql.js",
+      "scripts/index/underscore.js",
+      "scripts/index/Wikibase.js",
+      "scripts/index/hint/Sparql.js",
+      "scripts/index/tooltip/Rdf.js"
     ]
   );
   
@@ -56,7 +70,11 @@ function init() {
     module,
     [
       "styles/sparql-import.less",
-      "styles/theme.less"
+      "styles/theme.less",
+      "styles/bootstrap.css",
+      "styles/codemirror.css",
+      //"styles/fullscreen.css",
+      "styles/show-hint.css"
     ]
   );
 

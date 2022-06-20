@@ -1,6 +1,19 @@
-<form bind="form"><div class="grid-layout layout-normal"><table>
-  <tr><td id="or-import-sparql"></td></tr>
-  <tr><td><textarea spellcheck="false" bind="textInput" name="sparql" id="sparql-import-textarea"></textarea>
-  </td></tr>
-  <tr><td><button bind="queryButton" class="button button-primary" type="button"></button></td></tr>
-</table></div></form>
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+
+</head>
+<body>
+
+<textarea class="editor" placeholder="SPARQL editor with code completion (ctrl+space) and tooltips for Wikidata.org"></textarea>
+	<script type="text/javascript">
+
+	$( document ).ready( function() {
+		var editor = new scripts.index.Editor();
+		editor.fromTextArea( $( '.editor' )[0] );
+	} );
+	</script>
+
+
+</body>
+</html>
