@@ -3,5 +3,6 @@
     "sparql-import/creating": "Creating project …",
     "sparql-import/importer-name": "SPARQL",
     "sparql-import/importer-label": "Enter your SPARQL query here:",
+    "sparql-import/endpoint-label": "Enter your SPARQL endpoint here:",
     "sparql-buttons/query": "Query"
 }
