@@ -13,9 +13,11 @@ Refine.SPARQLSourceUI.prototype.attachUI = function(body) {
   $('#sparql-endpoint').text($.i18n('sparql-import/endpoint-label'));
   $('#or-import-sparql').text($.i18n('sparql-import/importer-label'));
   this._elmts.queryButton.html($.i18n('sparql-buttons/query'));
+  this._elmts.endpointTextInput[0].defaultValue = "https://query.wikidata.org/bigdata/namespace/wdq/sparql";
   
   this._elmts.queryButton.on('click',function(evt){
 	
+	var endpoint = jQueryTrim($( "#sparql-endpoint-textarea" ).val());
 	var api = new wikibase.queryService.api.Sparql();
 	var query = jQuery.trim($( "#sparql-import-textarea" ).val());
 	
