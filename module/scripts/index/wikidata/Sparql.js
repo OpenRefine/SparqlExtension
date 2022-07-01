@@ -4,8 +4,10 @@ wikibase.queryService.api = wikibase.queryService.api || {};
 
 wikibase.queryService.api.Sparql = ( function( $ ) {
 	'use strict';
+	
+	import {endpoint} from "./sparql-source-ui.js";
 
-	var SPARQL_SERVICE_URI = 'https://query.wikidata.org/bigdata/namespace/wdq/sparql',
+	var SPARQL_SERVICE_URI = endpoint,
 		ERROR_CODES = {
 			TIMEOUT: 10,
 			MALFORMED: 20,

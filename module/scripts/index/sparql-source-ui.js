@@ -17,7 +17,7 @@ Refine.SPARQLSourceUI.prototype.attachUI = function(body) {
   
   this._elmts.queryButton.on('click',function(evt){
 	
-	var endpoint = jQueryTrim($( "#sparql-endpoint-textarea" ).val());
+	export var endpoint = jQueryTrim($( "#sparql-endpoint-textarea" ).val());
 	var api = new wikibase.queryService.api.Sparql();
 	var query = jQueryTrim($( "#sparql-query-textarea" ).val());
 	
