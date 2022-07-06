@@ -2,7 +2,7 @@ SPARQL extension
 =================
 
 This is a skeleton of OpenRefine extension for SPARQL import, in the form of an independent Maven project.
-It works with OpenRefine 3.6+.
+It works with OpenRefine 3.5.2
 
 
 Building it
