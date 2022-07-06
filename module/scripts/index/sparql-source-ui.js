@@ -16,7 +16,7 @@ Refine.SPARQLSourceUI.prototype.attachUI = function(body) {
   this._elmts.queryButton.on('click',function(evt){
 	
 	var api = new wikibase.queryService.api.Sparql();
-	var query = jQueryTrim($( "#sparql-import-textarea" ).val());
+	var query = jQuery.trim($( "#sparql-import-textarea" ).val());
 	
 	api.query( query ).done(function(){
 		var json = JSON.parse( api.getResultAsJson() );
