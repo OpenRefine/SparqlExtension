@@ -19,9 +19,9 @@ Refine.SPARQLSourceUI.prototype.attachUI = function(body) {
   this._elmts.queryButton.on('click',function(evt){
 	
 	endpoint = jQueryTrim($( "#sparql-endpoint-textarea" ).val());
-	debugger;
 	
-	var api = self.sparql();
+	var api = new Refine.SPARQLSourceUI.prototype.sparql(endpoint);
+  
 	var query = jQueryTrim($( "#sparql-query-textarea" ).val());
 	
 	api.query( query ).done(function(){
@@ -35,14 +35,11 @@ Refine.SPARQLSourceUI.prototype.attachUI = function(body) {
   
 };
 
-Refine.SPARQLSourceUI.prototype.sparql = function() {
+Refine.SPARQLSourceUI.prototype.sparql = ( function( $ ) {
 	'use strict';
 	
 	//import {endpoint} from "./sparql-source-ui.js";
 	
-  //var endpoint = jQueryTrim($( "#sparql-endpoint-textarea" ).val());
-	debugger;
-  
 	var SPARQL_SERVICE_URI = endpoint,
 		ERROR_CODES = {
 			TIMEOUT: 10,
@@ -602,7 +599,7 @@ Refine.SPARQLSourceUI.prototype.sparql = function() {
 
 	return SELF;
 
-};
+}( jQuery ) );
 
 
 Refine.SPARQLSourceUI.prototype.focus = function() {
