@@ -20,7 +20,8 @@ Refine.SPARQLSourceUI.prototype.attachUI = function(body) {
 	
 	endpoint = jQueryTrim($( "#sparql-endpoint-textarea" ).val());
 	
-	var api = new Refine.SPARQLSourceUI.prototype.sparql(endpoint);
+	// var api = new Refine.SPARQLSourceUI.prototype.sparql(endpoint);
+  var api = new wikibase.queryService.api.Sparql(endpoint);
   
 	var query = jQueryTrim($( "#sparql-query-textarea" ).val());
 	
