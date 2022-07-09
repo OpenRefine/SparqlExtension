@@ -18,12 +18,11 @@ Refine.SPARQLSourceUI.prototype.attachUI = function(body) {
   
   this._elmts.queryButton.on('click',function(evt){
     
-    endpoint = jQueryTrim($( "#sparql-endpoint-textarea" ).val());
+    endpoint = jQuery.trim($( "#sparql-endpoint-textarea" ).val());
     
-    // var api = new Refine.SPARQLSourceUI.prototype.sparql(endpoint);
     var api = new wikibase.queryService.api.Sparql(endpoint);
     
-    var query = jQueryTrim($( "#sparql-query-textarea" ).val());
+    var query = jQuery.trim($( "#sparql-query-textarea" ).val());
     
     api.query( query ).done(function(){
       var json = JSON.parse( api.getResultAsJson() );
