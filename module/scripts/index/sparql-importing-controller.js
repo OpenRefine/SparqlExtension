@@ -145,7 +145,7 @@ Refine.SPARQLImportingController.prototype._showParsingPanel = function(hasFileS
     if (record.fileName == '(clipboard)') {
       this._projectName = $.i18n('core-index-import/clipboard');
     } else {
-      this._projectName = jQueryTrim(record.fileName.replace(/[\._-]/g, ' ').replace(/\s+/g, ' '));
+      this._projectName = jQuery.trim(record.fileName.replace(/[\._-]/g, ' ').replace(/\s+/g, ' '));
     }
   }
   if (this._projectName) {
@@ -382,7 +382,7 @@ Refine.SPARQLImportingController.prototype.getPreviewData = function(callback, n
 
 Refine.SPARQLImportingController.prototype._createProject = function() {
   if ((this._formatParserUI) && this._formatParserUI.confirmReadyToCreateProject()) {
-    var projectName = jQueryTrim(this._parsingPanelElmts.projectNameInput[0].value);
+    var projectName = jQuery.trim(this._parsingPanelElmts.projectNameInput[0].value);
     if (projectName.length === 0) {
       window.alert($.i18n('core-index-import/warning-name'));
       this._parsingPanelElmts.projectNameInput.focus();
