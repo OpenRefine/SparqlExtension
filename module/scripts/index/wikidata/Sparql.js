@@ -5,10 +5,6 @@ wikibase.queryService.api = wikibase.queryService.api || {};
 wikibase.queryService.api.Sparql = ( function( $ ) {
 	'use strict';
 
-	//import {endpoint} from "./sparql-source-ui.js";
-	
-  //var endpoint = jQueryTrim($( "#sparql-endpoint-textarea" ).val());
-	// debugger;
   
 	var SPARQL_SERVICE_URI = 'https://query.wikidata.org/bigdata/namespace/wdq/sparql',
 		ERROR_CODES = {
