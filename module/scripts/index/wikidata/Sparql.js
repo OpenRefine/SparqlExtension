@@ -5,6 +5,7 @@ wikibase.queryService.api = wikibase.queryService.api || {};
 wikibase.queryService.api.Sparql = ( function( $ ) {
 	'use strict';
 
+  
 	var SPARQL_SERVICE_URI = 'https://query.wikidata.org/bigdata/namespace/wdq/sparql',
 		ERROR_CODES = {
 			TIMEOUT: 10,

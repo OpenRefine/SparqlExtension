@@ -1,6 +1,12 @@
+<form bind="endpointForm"><div class="grid-layout layout-normal"><table>
+  <tr><td id="sparql-endpoint"></td></tr>
+  <tr><td><textarea spellcheck="false" bind="endpointTextInput" name="endpoint" id="sparql-endpoint-textarea"></textarea>
+  </td></tr>
+</table></div></form>
+
 <form bind="form"><div class="grid-layout layout-normal"><table>
   <tr><td id="or-import-sparql"></td></tr>
-  <tr><td><textarea spellcheck="false" bind="textInput" name="sparql" id="sparql-import-textarea"></textarea>
+  <tr><td><textarea spellcheck="false" bind="queryTextInput" name="sparql" id="sparql-query-textarea"></textarea>
   </td></tr>
   <tr><td><button bind="queryButton" class="button button-primary" type="button"></button></td></tr>
 </table></div></form>
