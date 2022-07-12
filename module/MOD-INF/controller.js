@@ -7,7 +7,7 @@
 
 var html = "text/html";
 var encoding = "UTF-8";
-var version = "0.1";
+var version = "0.3";
 var ClientSideResourceManager = Packages.com.google.refine.ClientSideResourceManager;
 
 /*
@@ -30,26 +30,12 @@ function init() {
     module,
     [
       "scripts/index/sparql-importing-controller.js",
-      "scripts/index/parsing-panel.js",
-      "scripts/index/sparql-source-ui.js",
-      "scripts/index/json-parser-ui.js",
-      "scripts/index/wikidata/Sparql.js"
+      "scripts/index/Sparql.js",
+      "scripts/index/sparql-source-ui.js"
     ]
   );
   
-  // Script files to inject into /project page
-  ClientSideResourceManager.addPaths(
-    "project/scripts",
-    module,
-    [
-      "scripts/index/sparql-importing-controller.js",
-      "scripts/index/parsing-panel.js",
-      "scripts/index/sparql-source-ui.js",
-      "scripts/index/json-parser-ui.js",
-      "scripts/index/wikidata/Sparql.js"
-    ]
-  );
-  
+    
   // Style files to inject into /index page
   ClientSideResourceManager.addPaths(
     "index/styles",
