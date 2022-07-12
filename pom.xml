@@ -131,33 +131,10 @@
       <scope>provided</scope>
     </dependency>
     <dependency>
-      <groupId>org.openrefine.dependencies.wdtk</groupId>
-      <artifactId>wdtk-datamodel</artifactId>
-      <version>${wdtk.version}</version>
-      <scope>provided</scope>
-    </dependency>
-    <dependency>
-      <groupId>org.openrefine.dependencies.wdtk</groupId>
-      <artifactId>wdtk-util</artifactId>
-      <version>${wdtk.version}</version>
-      <scope>provided</scope>
-    </dependency>
-    <dependency>
       <groupId>org.slf4j</groupId>
       <artifactId>slf4j-api</artifactId>
       <version>1.7.30</version>
       <scope>provided</scope>
-    </dependency>
-    <dependency>
-      <groupId>org.sweble.wikitext</groupId>
-      <artifactId>swc-parser-lazy</artifactId>
-      <version>${swc-parser-lazy.version}</version>
-      <scope>provided</scope>
-    </dependency>
-    <dependency>
-        <groupId>com.squareup.okhttp3</groupId>
-        <artifactId>okhttp</artifactId>
-        <version>4.9.1</version>
     </dependency>
 
     <!-- testing dependencies -->
