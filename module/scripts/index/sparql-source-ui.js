@@ -30,6 +30,8 @@ Refine.SPARQLSourceUI.prototype.attachUI = function(body) {
       $("#sparql-query-textarea").val(JSON.stringify(json));
         
       self._controller.startImportJob(self._elmts.form, $.i18n('core-index-import/uploading-pasted-data'))
+    }).fail(function(){
+	  alert(api._error.message);
     });
   });
 };
