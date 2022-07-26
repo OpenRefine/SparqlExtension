@@ -181,6 +181,64 @@ Refine.SPARQLImportingController.prototype._showParsingPanel = function() {
     this._updatePreview();
 };
 
+Refine.SPARQLImportingController.prototype._scheduleUpdatePreview = function() {
+    if (this._timerID != null) {
+      window.clearTimeout(this._timerID);
+      this._timerID = null;
+    }
+
+    var self = this;
+    this._timerID = window.setTimeout(function() {
+      self._timerID = null;
+      self._updatePreview();
+    }, 500); // 0.5 second
+  };
+
+Refine.SPARQLImportingController.prototype._updatePreview = function() {
+    var self = this;
+    this._parsingPanelElmts.dataPanel.hide();
+    this._parsingPanelElmts.progressPanel.show();
+
+    Refine.wrapCSRF(function(token) {
+      $.post(
+      "command/core/importing-controller?" + $.param({
+        "controller": "sparql/sparql-importing-controller",
+        "jobID": self._jobID,
+        "subCommand": "parse-preview",
+        "csrf_token": token
+      }),
+      
+        {
+          "options" : JSON.stringify(self.getOptions())
+        },
+
+        function(result) {
+            if (result.status == "ok") {
+                self._getPreviewData(function(projectData) {
+                self._parsingPanelElmts.progressPanel.hide();
+                self._parsingPanelElmts.dataPanel.show();
+
+                new Refine.PreviewTable(projectData, self._parsingPanelElmts.dataPanel.off().empty());
+            });
+            } else {
+
+            alert('Errors:\n' +  (result.message) ? result.message : Refine.CreateProjectUI.composeErrorMessage(job));
+            self._parsingPanelElmts.progressPanel.hide();
+
+            Refine.CreateProjectUI.cancelImportingJob(self._jobID);
+
+            delete self._jobID;
+            delete self._options;
+
+            self._createProjectUI.showSourceSelectionPanel();
+
+            }
+        },
+        "json"
+        );
+    });
+  };
+
 Refine.SPARQLImportingController.prototype.getPreviewData = function(callback, numRows) {
   var self = this;
   var result = {};
