@@ -89,124 +89,105 @@ Refine.CommonsImportingController.prototype.startImportingDocument = function(do
   );
 };
 
-Refine.SPARQLImportingController.prototype._showParsingPanel = function(hasFileSelection) {
+Refine.SPARQLImportingController.prototype._showParsingPanel = function() {
   var self = this;
-
-  if (!(this._format)) {
-    this._format = this._job.config.rankedFormats[0];
-  }
-  if (!(this._parserOptions)) {
-    this._parserOptions = {};
-  }
-  if (this._formatParserUI) {
-    this._formatParserUI.dispose();
-    delete this._formatParserUI;
-  }
   
-  this._prepareParsingPanel();
-  this._parsingPanelElmts.nextButton.on('click',function() {
-    self._createProject();
-  });
-  if (hasFileSelection) {
-    this._parsingPanelElmts.previousButton.on('click',function() {
-      self._createProjectUI.showCustomPanel(self._fileSelectionPanel);
-    });
-  } else {
-    this._parsingPanelElmts.previousButton.hide();
-  }
-
-  if (!(this._projectName) && this._job.config.fileSelection.length > 0) {
-    var index = this._job.config.fileSelection[0];
-    var record = this._job.config.retrievalRecord.files[index];
-    if (record.fileName == '(clipboard)') {
-      this._projectName = $.i18n('core-index-import/clipboard');
-    } else {
-      this._projectName = jQuery.trim(record.fileName.replace(/[\._-]/g, ' ').replace(/\s+/g, ' '));
-    }
-  }
-  if (this._projectName) {
-    this._parsingPanelElmts.projectNameInput[0].value = this._projectName;
-  }
-
-  this._createProjectUI.showCustomPanel(this._parsingPanel);
-};
-
-Refine.SPARQLImportingController.prototype._prepareParsingPanel = function() {
-  var self = this;
-
   this._parsingPanel.off().empty().html(
-      DOM.loadHTML("core", "scripts/index/default-importing-controller/parsing-panel.html"));
-
+      DOM.loadHTML("sparql", "scripts/index/sparql-parsing-panel.html"));
+      
   this._parsingPanelElmts = DOM.bind(this._parsingPanel);
-  this._parsingPanelElmts.startOverButton.on('click',function() {
-    self._startOver();
-  });
-  this._parsingPanelElmts.progressPanel.hide();
 
-  this._parsingPanelElmts.previousButton.html($.i18n('core-buttons/previous'));
-  this._parsingPanelElmts.startOverButton.html($.i18n('core-buttons/startover'));
-  this._parsingPanelElmts.nextButton.html($.i18n('core-buttons/create-project'));
-  $('#or-import-parsopt').text($.i18n('core-index-import/parsing-options'));
-  $('#or-import-projname').html($.i18n('core-index-import/project-name'));
-  $('#or-import-projtags').html($.i18n('core-index-import/project-tags'));
-  $('#or-import-updating').text($.i18n('core-index-import/updating-preview'));
-  $('#or-import-parseas').text($.i18n('core-index-import/parse-as'));
-
-  //tags dropdown
-  $("#tagsInput").select2({
-    data: Refine.TagsManager._getAllProjectTags() ,
-    tags: true,
-    tokenSeparators: [",", " "]
-  });
+  this._parsingPanelElmts.startOverButton.html($.i18n('sparql-parsing/start-over'));
+  this._parsingPanelElmts.sparql_conf_pars.html($.i18n('sparql-parsing/conf-pars'));
+  this._parsingPanelElmts.sparql_proj_name.html($.i18n('sparql-parsing/proj-name'));
+  this._parsingPanelElmts.createProjectButton.html($.i18n('sparql-parsing/create-proj'));
+  this._parsingPanelElmts.sparql_options.html($.i18n('sparql-parsing/option'));
+  this._parsingPanelElmts.previewButton.html($.i18n('sparql-parsing/preview-button'));
+  this._parsingPanelElmts.sparql_updating.html($.i18n('sparql-parsing/updating-preview'));
+  this._parsingPanelElmts.sparql_discard_next.html($.i18n('sparql-parsing/discard-next'));
+  this._parsingPanelElmts.sparql_discard.html($.i18n('sparql-parsing/discard'));
+  this._parsingPanelElmts.sparql_limit_next.html($.i18n('sparql-parsing/limit-next'));
+  this._parsingPanelElmts.sparql_limit.html($.i18n('sparql-parsing/limit'));
+  this._parsingPanelElmts.sparql_store_row.html($.i18n('sparql-parsing/store-row'));
+  this._parsingPanelElmts.sparql_store_cell.html($.i18n('sparql-parsing/store-cell'));
+  this._parsingPanelElmts.sparql_disable_auto_preview.text($.i18n('sparql-parsing/disable-auto-preview'));
   
-  this._parsingPanelResizer = function() {
-    var elmts = self._parsingPanelElmts;
-    var width = self._parsingPanel.width();
-    var height = self._parsingPanel.height();
-    var headerHeight = elmts.wizardHeader.outerHeight(true);
-    var controlPanelHeight = 300;
-
-    elmts.dataPanel
-    .css("left", "0px")
-    .css("top", headerHeight + "px")
-    .css("width", (width - DOM.getHPaddings(elmts.dataPanel)) + "px")
-    .css("height", (height - headerHeight - controlPanelHeight - DOM.getVPaddings(elmts.dataPanel)) + "px");
-    elmts.progressPanel
-    .css("left", "0px")
-    .css("top", headerHeight + "px")
-    .css("width", (width - DOM.getHPaddings(elmts.progressPanel)) + "px")
-    .css("height", (height - headerHeight - controlPanelHeight - DOM.getVPaddings(elmts.progressPanel)) + "px");
-
-    elmts.controlPanel
-    .css("left", "0px")
-    .css("top", (height - controlPanelHeight) + "px")
-    .css("width", (width - DOM.getHPaddings(elmts.controlPanel)) + "px")
-    .css("height", (controlPanelHeight - DOM.getVPaddings(elmts.controlPanel)) + "px");
-  };
-
-  $(window).on('resize',this._parsingPanelResizer);
-  this._parsingPanelResizer();
-
-  var formats = this._job.config.rankedFormats;
-  var createFormatTab = function(format) {
-    var formatLabelKey =Refine.importingConfig.formats[format].label;
-    var tab = $('<div>')
-    .text( $.i18n(formatLabelKey))
-    .attr("format", format)
-    .addClass("default-importing-parsing-control-panel-format")
-    .appendTo(self._parsingPanelElmts.formatsContainer)
-    .on('click',function() {
-      self._selectFormat(format);
-    });
-
-    if (format == self._format) {
-      tab.addClass("selected");
+  if (this._parsingPanelResizer) {
+      $(window).off('resize', this._parsingPanelResizer);
     }
-  };
-  for (var i = 0; i < formats.length; i++) {
-    createFormatTab(formats[i]);
-  }
-  this._selectFormat(this._format);
+
+    this._parsingPanelResizer = function() {
+      var elmts = self._parsingPanelElmts;
+      var width = self._parsingPanel.width();
+      var height = self._parsingPanel.height();
+      var headerHeight = elmts.wizardHeader.outerHeight(true);
+      var controlPanelHeight = 250;
+
+      elmts.dataPanel
+      .css("left", "0px")
+      .css("top", headerHeight + "px")
+      .css("width", (width - DOM.getHPaddings(elmts.dataPanel)) + "px")
+      .css("height", (height - headerHeight - controlPanelHeight - DOM.getVPaddings(elmts.dataPanel)) + "px");
+      elmts.progressPanel
+      .css("left", "0px")
+      .css("top", headerHeight + "px")
+      .css("width", (width - DOM.getHPaddings(elmts.progressPanel)) + "px")
+      .css("height", (height - headerHeight - controlPanelHeight - DOM.getVPaddings(elmts.progressPanel)) + "px");
+
+      elmts.controlPanel
+      .css("left", "0px")
+      .css("top", (height - controlPanelHeight) + "px")
+      .css("width", (width - DOM.getHPaddings(elmts.controlPanel)) + "px")
+      .css("height", (controlPanelHeight - DOM.getVPaddings(elmts.controlPanel)) + "px");
+    };
+
+    $(window).on('resize',this._parsingPanelResizer);
+    this._parsingPanelResizer();
+
+    this._parsingPanelElmts.startOverButton.on('click',function() {
+      // explicitly cancel the import job
+      Refine.CreateProjectUI.cancelImportingJob(self._jobID);
+
+      delete self._jobID;
+      delete self._options;
+
+      self._createProjectUI.showSourceSelectionPanel();
+    });
+    
+    this._parsingPanelElmts.createProjectButton.on('click',function() { self._createProject(); });
+    this._parsingPanelElmts.previewButton.on('click',function() { self._updatePreview(); });
+
+    if (this._options.limit > 0) {
+      this._parsingPanelElmts.limitCheckbox.prop("checked", true);
+      this._parsingPanelElmts.limitInput[0].value = this._options.limit.toString();
+    }
+    if (this._options.skipDataLines > 0) {
+      this._parsingPanelElmts.skipCheckbox.prop("checked", true);
+      this._parsingPanelElmts.skipInput.value[0].value = this._options.skipDataLines.toString();
+    }
+    if (this._options.storeBlankRows) {
+      this._parsingPanelElmts.storeBlankRowsCheckbox.prop("checked", true);
+    }
+    if (this._options.storeBlankCellsAsNulls) {
+      this._parsingPanelElmts.storeBlankCellsAsNullsCheckbox.prop("checked", true);
+    }
+
+    if (this._options.disableAutoPreview) {
+      this._parsingPanelElmts.disableAutoPreviewCheckbox.prop('checked', true);
+    }
+
+    // If disableAutoPreviewCheckbox is not checked, we will schedule an automatic update
+    var onChange = function() {
+      if (!self._parsingPanelElmts.disableAutoPreviewCheckbox[0].checked)
+      {
+        self._scheduleUpdatePreview();
+      }
+    };
+    this._parsingPanel.find("input").on("change", onChange);
+    this._parsingPanel.find("select").on("change", onChange);
+
+    this._createProjectUI.showCustomPanel(this._parsingPanel);
+    this._updatePreview();
 };
 
 Refine.SPARQLImportingController.prototype.getPreviewData = function(callback, numRows) {
