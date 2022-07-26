@@ -209,17 +209,7 @@ Refine.SPARQLImportingController.prototype._prepareParsingPanel = function() {
   this._selectFormat(this._format);
 };
 
-Refine.SPARQLImportingController.prototype._disposeParserUI = function() {
-  if (this._formatParserUI) {
-    this._formatParserUI.dispose();
-    delete this._formatParserUI;
-  }
-  if (this._parsingPanelElmts) {
-    this._parsingPanelElmts.optionsContainer.off().empty();
-    this._parsingPanelElmts.progressPanel.off();
-    this._parsingPanelElmts.dataPanel.off().empty();
-  }
-};
+
 
 Refine.SPARQLImportingController.prototype._selectFormat = function(newFormat) {
   if (newFormat == this._format && (this._formatParserUI)) {
