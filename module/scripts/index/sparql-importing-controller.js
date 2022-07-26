@@ -32,7 +32,7 @@ Refine.SPARQLImportingController = function(createProjectUI) {
 };
 Refine.CreateProjectUI.controllers.push(Refine.SPARQLImportingController);
 
-Refine.CommonsImportingController.prototype.startImportingDocument = function(doc) {
+Refine.SPARQLImportingController.prototype.startImportingDocument = function(doc) {
   var dismiss = DialogSystem.showBusy($.i18n('sparql-import/preparing'));
   var self = this;
   Refine.postCSRF(
@@ -71,7 +71,7 @@ Refine.CommonsImportingController.prototype.startImportingDocument = function(do
   );
 };
 
-Refine.CommonsImportingController.prototype.getOptions = function() {
+Refine.SPARQLImportingController.prototype.getOptions = function() {
   var options = {
     endpoint: this._doc.endpoint,
     query: this._doc.query,
