@@ -71,6 +71,15 @@ Refine.CommonsImportingController.prototype.startImportingDocument = function(do
   );
 };
 
+Refine.CommonsImportingController.prototype.getOptions = function() {
+  var options = {
+    endpoint: this._doc.endpoint,
+    query: this._doc.query,
+  };
+
+  return options;
+};
+
 Refine.SPARQLImportingController.prototype._showParsingPanel = function() {
   var self = this;
   
@@ -216,7 +225,6 @@ Refine.SPARQLImportingController.prototype._createProject = function() {
     var projectTags = $("#tagsInput").val();
 
     var self = this;
-    var options = this._formatParserUI.getOptions();
     options.projectName = projectName;
     options.projectTags = projectTags;
     Refine.wrapCSRF(function(token) {
