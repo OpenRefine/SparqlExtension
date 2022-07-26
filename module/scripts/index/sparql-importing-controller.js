@@ -50,7 +50,44 @@ Refine.SPARQLImportingController.prototype._startOver = function() {
   this._createProjectUI.showSourceSelectionPanel();
 };
 
+Refine.CommonsImportingController.prototype.startImportingDocument = function(doc) {
+  var dismiss = DialogSystem.showBusy($.i18n('sparql-import/preparing'));
+  var self = this;
+  Refine.postCSRF(
+    "command/core/create-importing-job",
+    null,
+    function(data) {
+      Refine.wrapCSRF(function(token) {
+        $.post(
+            "command/core/importing-controller?" + $.param({
+            "controller": "sparql/sparql-importing-controller",
+            "subCommand": "initialize-parser-ui",
+            "endpoint" : JSON.stringify(doc.endpoint),
+            "query" : JSON.stringify(doc.query),
+            "csrf_token": token
+            }),
+            null,
 
+            function(data2) {
+                dismiss();
+
+                if (data2.status == 'ok') {
+                    self._doc = doc;
+                    self._jobID = data.jobID;
+                    self._options = data2.options;
+
+                    self._showParsingPanel();
+                } else {
+                    alert(data2.message);
+                }
+            },
+            "json"
+        );
+      });
+    },
+    "json"
+  );
+};
 
 Refine.SPARQLImportingController.prototype._showParsingPanel = function(hasFileSelection) {
   var self = this;
