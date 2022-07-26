@@ -209,40 +209,6 @@ Refine.SPARQLImportingController.prototype._prepareParsingPanel = function() {
   this._selectFormat(this._format);
 };
 
-Refine.SPARQLImportingController.prototype.updateFormatAndOptions = function(options, callback, finallyCallBack) {
-  var self = this;
-  Refine.wrapCSRF(function(token) {
-    $.post(
-      "command/core/importing-controller?" + $.param({
-        "controller": "core/default-importing-controller",
-        "jobID": self._jobID,
-        "subCommand": "update-format-and-options",
-        "csrf_token": token
-      }),
-      {
-        "format" : self._format,
-        "options" : JSON.stringify(options)
-      },
-      function(o) {
-        if (o.status == 'error') {
-          if (o.message) {
-            alert(o.message);
-          } else {
-            var messages = [];
-            $.each(o.errors, function() { messages.push(this.message); });
-            alert(messages.join('\n\n'));
-            }
-            if(finallyCallBack){
-              finallyCallBack();
-            }
-          }
-          callback(o);
-        },
-        "json"
-    ).fail(() => { alert($.i18n('core-index-parser/update-format-failed')); });
-  });
-};
-
 Refine.SPARQLImportingController.prototype.getPreviewData = function(callback, numRows) {
   var self = this;
   var result = {};
