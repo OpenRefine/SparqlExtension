@@ -209,43 +209,6 @@ Refine.SPARQLImportingController.prototype._prepareParsingPanel = function() {
   this._selectFormat(this._format);
 };
 
-
-
-Refine.SPARQLImportingController.prototype._selectFormat = function(newFormat) {
-  if (newFormat == this._format && (this._formatParserUI)) {
-    // The new format is the same as the existing one.
-    return;
-  }
-
-  var uiClass = Refine.JsonParserUI;
-  if (uiClass) {
-    var self = this;
-    this._ensureFormatParserUIHasInitializationData(newFormat, function() {
-      self._disposeParserUI();
-      self._parsingPanelElmts.formatsContainer
-      .find(".default-importing-parsing-control-panel-format")
-      .removeClass("selected")
-      .each(function() {
-        if (this.getAttribute("format") == newFormat) {
-          $(this).addClass("selected");
-        }
-      });
-
-      self._format = newFormat;
-      self._formatParserUI = new uiClass(
-        self,
-        self._jobID,
-        self._job,
-        self._format,
-        self._parserOptions[newFormat],
-        self._parsingPanelElmts.dataPanel,
-        self._parsingPanelElmts.progressPanel,
-        self._parsingPanelElmts.optionsContainer
-      );
-    });
-  }
-};
-
 Refine.SPARQLImportingController.prototype._ensureFormatParserUIHasInitializationData = function(format, onDone) {
   if (!(format in this._parserOptions)) {
     var self = this;
