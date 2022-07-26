@@ -32,24 +32,6 @@ Refine.SPARQLImportingController = function(createProjectUI) {
 };
 Refine.CreateProjectUI.controllers.push(Refine.SPARQLImportingController);
 
-Refine.SPARQLImportingController.prototype._startOver = function() {
-  if (this._jobID) {
-    Refine.CreateProjectUI.cancelImportingJob(this._jobID);
-  }
-
-  delete this._parsingPanelElmts;
-
-  delete this._jobID;
-  delete this._job;
-  delete this._extensions;
-
-  delete this._format;
-  delete this._parserOptions;
-  delete this._projectName;
-
-  this._createProjectUI.showSourceSelectionPanel();
-};
-
 Refine.CommonsImportingController.prototype.startImportingDocument = function(doc) {
   var dismiss = DialogSystem.showBusy($.i18n('sparql-import/preparing'));
   var self = this;
