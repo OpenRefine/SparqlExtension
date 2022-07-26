@@ -37,8 +37,10 @@ public class SPARQLImportingController implements ImportingController {
 
     }
 
+    /* Handling of http requests between frontend and OpenRefine servlet */
     @Override
-    public void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+    public void doPost(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
         if (logger.isDebugEnabled()) {
             logger.debug("doPost Query String::{}", request.getQueryString());
         }
@@ -53,13 +55,22 @@ public class SPARQLImportingController implements ImportingController {
 
         if ("initialize-parser-ui".equals(subCommand)) {
             doInitializeParserUI(request, response, parameters);
+        } else if ("parse-preview".equals(subCommand)) {
+            try {
+
+                // doParsePreview(request, response, parameters);
+
+            } catch (Exception e) {
+                logger.error("doPost::DatabaseServiceException::{}", e);
+                HttpUtilities.respond(response, "error", "Unable to parse preview");
+            }
+        } else if ("create-project".equals(subCommand)) {
+            // doCreateProject(request, response, parameters);
         } else {
             HttpUtilities.respond(response, "error", "No such sub command");
         }
 
     }
-
-
 
     /**
      * 
