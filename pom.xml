@@ -20,7 +20,7 @@
   </licenses>
 
    <properties>
-    <openrefine.version>3.5.2</openrefine.version>
+    <openrefine.version>3.7-SNAPSHOT</openrefine.version>
     <jackson.version>2.12.3</jackson.version>
     <surefire.version>2.22.2</surefire.version>
   </properties>
@@ -133,6 +133,11 @@
       <artifactId>slf4j-api</artifactId>
       <version>1.7.30</version>
       <scope>provided</scope>
+    </dependency>
+        <dependency>
+        <groupId>com.squareup.okhttp3</groupId>
+        <artifactId>okhttp</artifactId>
+        <version>4.9.1</version>
     </dependency>
 
     <!-- testing dependencies -->
