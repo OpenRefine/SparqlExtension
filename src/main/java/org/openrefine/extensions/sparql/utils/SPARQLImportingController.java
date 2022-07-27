@@ -241,8 +241,7 @@ public class SPARQLImportingController implements ImportingController {
 
             Request request = new Request.Builder().url(urlBase).build();
             Response response = client.newCall(request).execute();
-            JsonNode jsonNode = new ObjectMapper().readTree(response.body().string());
-            results = jsonNode.path(query);
+            results = new ObjectMapper().readTree(response.body().string());
 
         }
 
