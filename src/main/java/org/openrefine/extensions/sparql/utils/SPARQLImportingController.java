@@ -79,7 +79,7 @@ public class SPARQLImportingController implements ImportingController {
                 doParsePreview(request, response, parameters);
 
             } catch (Exception e) {
-                logger.error("doPost::Exception::{}" + e);
+                logger.error("doPost::Exception::{}", e);
                 HttpUtilities.respond(response, "error", "Unable to parse preview");
             }
         } else if ("create-project".equals(subCommand)) {
@@ -196,7 +196,7 @@ public class SPARQLImportingController implements ImportingController {
         String endpoint = options.get("endpoint").asText();
         String query = options.get("query").asText();
 
-        setProgress(job, "Reading", 0);
+        setProgress(job, endpoint, 0);
 
         TabularImportingParserBase.readTable(
                 project,
@@ -205,7 +205,7 @@ public class SPARQLImportingController implements ImportingController {
                 limit,
                 options,
                 exceptions);
-        setProgress(job, "Reading", 100);
+        setProgress(job, endpoint, 100);
 
     }
 
@@ -242,7 +242,7 @@ public class SPARQLImportingController implements ImportingController {
             Request request = new Request.Builder().url(urlBase).build();
             Response response = client.newCall(request).execute();
             JsonNode jsonNode = new ObjectMapper().readTree(response.body().string());
-            results = jsonNode.path("results").path("bindings");
+            results = jsonNode.path(query);
 
         }
 
@@ -250,13 +250,13 @@ public class SPARQLImportingController implements ImportingController {
         public List<Object> getNextRowOfCells() throws IOException {
 
             if (results.size() > 0) {
-                setProgress(job, "Reading", 100 * indexRow / results.size());
+                setProgress(job, endpoint, 100 * indexRow / results.size());
             } else if (indexRow == results.size()) {
-                setProgress(job, "Reading", 100);
+                setProgress(job, endpoint, 100);
             }
 
             if (indexRow < results.size()) {
-                rowsOfCells = Collections.singletonList(results.get(indexRow++).findValue("value").asText());
+                rowsOfCells = Collections.singletonList(results.get(indexRow++).findValue("title").asText());
 
                 return rowsOfCells;
 
