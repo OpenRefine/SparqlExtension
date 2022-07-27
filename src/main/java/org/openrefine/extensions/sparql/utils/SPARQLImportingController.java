@@ -196,7 +196,7 @@ public class SPARQLImportingController implements ImportingController {
         String endpoint = options.get("endpoint").asText();
         String query = options.get("query").asText();
 
-        setProgress(job, "Reading", 0);
+        setProgress(job, endpoint, 0);
 
         TabularImportingParserBase.readTable(
                 project,
@@ -205,7 +205,7 @@ public class SPARQLImportingController implements ImportingController {
                 limit,
                 options,
                 exceptions);
-        setProgress(job, "Reading", 100);
+        setProgress(job, endpoint, 100);
 
     }
 
