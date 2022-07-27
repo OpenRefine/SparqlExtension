@@ -256,7 +256,7 @@ public class SPARQLImportingController implements ImportingController {
             }
 
             if (indexRow < results.size()) {
-                rowsOfCells = Collections.singletonList(results.get(indexRow++).findValue("item").asText());
+                rowsOfCells = Collections.singletonList(results.get(indexRow++).findValue("value").asText());
 
                 return rowsOfCells;
 
