@@ -236,8 +236,7 @@ public class SPARQLImportingController implements ImportingController {
 
             OkHttpClient client = new OkHttpClient.Builder().build();
             urlBase = HttpUrl.parse(endpoint).newBuilder()
-                    .addQueryParameter("query", query)
-                    .addQueryParameter("format", "json").build();
+                    .addQueryParameter("query", query).build();
 
             Request request = new Request.Builder().url(urlBase).build();
             Response response = client.newCall(request).execute();
