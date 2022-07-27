@@ -79,7 +79,7 @@ public class SPARQLImportingController implements ImportingController {
                 doParsePreview(request, response, parameters);
 
             } catch (Exception e) {
-                logger.error("doPost::Exception::{}", e);
+                logger.error("doPost::Exception::{}" + e);
                 HttpUtilities.respond(response, "error", "Unable to parse preview");
             }
         } else if ("create-project".equals(subCommand)) {
@@ -250,13 +250,13 @@ public class SPARQLImportingController implements ImportingController {
         public List<Object> getNextRowOfCells() throws IOException {
 
             if (results.size() > 0) {
-                setProgress(job, endpoint, 100 * indexRow / results.size());
+                setProgress(job, "Reading", 100 * indexRow / results.size());
             } else if (indexRow == results.size()) {
-                setProgress(job, endpoint, 100);
+                setProgress(job, "Reading", 100);
             }
 
             if (indexRow < results.size()) {
-                rowsOfCells = Collections.singletonList(results.get(indexRow++).findValue("title").asText());
+                rowsOfCells = Collections.singletonList(results.get(indexRow++).findValue("item").asText());
 
                 return rowsOfCells;
 
