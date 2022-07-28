@@ -239,7 +239,7 @@ Refine.SPARQLImportingController.prototype._updatePreview = function() {
     });
   };
 
-Refine.SPARQLImportingController.prototype.getPreviewData = function(callback, numRows) {
+Refine.SPARQLImportingController.prototype._getPreviewData = function(callback, numRows) {
   var self = this;
   var result = {};
 

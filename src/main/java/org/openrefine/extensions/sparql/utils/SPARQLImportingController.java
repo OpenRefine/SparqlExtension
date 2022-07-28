@@ -40,7 +40,7 @@ public class SPARQLImportingController implements ImportingController {
 
     private static final Logger logger = LoggerFactory.getLogger("SPARQLImportingController");
     protected RefineServlet servlet;
-    public static int DEFAULT_PREVIEW_LIMIT = 50;
+    public static int DEFAULT_PREVIEW_LIMIT = 100;
     public static int DEFAULT_PROJECT_LIMIT = 0;
 
     @Override
