@@ -32,323 +32,214 @@ Refine.SPARQLImportingController = function(createProjectUI) {
 };
 Refine.CreateProjectUI.controllers.push(Refine.SPARQLImportingController);
 
-Refine.SPARQLImportingController.prototype._startOver = function() {
-  if (this._jobID) {
-    Refine.CreateProjectUI.cancelImportingJob(this._jobID);
-  }
-
-  delete this._parsingPanelElmts;
-
-  delete this._jobID;
-  delete this._job;
-  delete this._extensions;
-
-  delete this._format;
-  delete this._parserOptions;
-  delete this._projectName;
-
-  this._createProjectUI.showSourceSelectionPanel();
-};
-
-Refine.SPARQLImportingController.prototype.startImportJob = function(form, progressMessage, callback) {
+Refine.SPARQLImportingController.prototype.startImportingDocument = function(doc) {
+  var dismiss = DialogSystem.showBusy($.i18n('sparql-import/preparing'));
   var self = this;
-  
-  Refine.wrapCSRF(function(token) {
-    $.post(
-        "command/core/create-importing-job",
-        { csrf_token: token },
-        function(data) {
-            var jobID = self._jobID = data.jobID;
-
-            form.attr("method", "post")
-            .attr("enctype", "multipart/form-data")
-            .attr("accept-charset", "UTF-8")
-            .attr("target", "create-project-iframe")
-            .attr("action", "command/core/importing-controller?" + $.param({
-            "controller": "sparql/sparql-importing-controller",
-            "jobID": jobID,
-            "subCommand": "load-raw-data",
-            "csrf_token": token
-            }));
-            form[0].submit();
-
-            var start = new Date();
-            var timerID = window.setInterval(
-            function() {
-                self._createProjectUI.pollImportJob(
-                start, jobID, timerID,
-                function(job) {
-                    return job.config.hasData;
-                },
-                function(jobID, job) {
-                    self._job = job;
-                    self._showParsingPanel(false);
-                    if (callback) {
-                    callback(jobID, job);
-                    }
-                },
-                function(job) {
-                    alert(job.config.error + '\n' + job.config.errorDetails);
-                    self._startOver();
-                }
-                );
-            },
-            1000
-            );
-            self._createProjectUI.showImportProgressPanel(progressMessage, function() {
-            // stop the iframe
-            $('#create-project-iframe')[0].contentWindow.stop();
-
-            // stop the timed polling
-            window.clearInterval(timerID);
-
-            // explicitly cancel the import job
-            Refine.CreateProjectUI.cancelImportingJob(jobID);
-
-            self._createProjectUI.showSourceSelectionPanel();
-            });
-        },
-        "json"
-    );
-  });
-};
-
-Refine.SPARQLImportingController.prototype._showParsingPanel = function(hasFileSelection) {
-  var self = this;
-
-  if (!(this._format)) {
-    this._format = this._job.config.rankedFormats[0];
-  }
-  if (!(this._parserOptions)) {
-    this._parserOptions = {};
-  }
-  if (this._formatParserUI) {
-    this._formatParserUI.dispose();
-    delete this._formatParserUI;
-  }
-  
-  this._prepareParsingPanel();
-  this._parsingPanelElmts.nextButton.on('click',function() {
-    self._createProject();
-  });
-  if (hasFileSelection) {
-    this._parsingPanelElmts.previousButton.on('click',function() {
-      self._createProjectUI.showCustomPanel(self._fileSelectionPanel);
-    });
-  } else {
-    this._parsingPanelElmts.previousButton.hide();
-  }
-
-  if (!(this._projectName) && this._job.config.fileSelection.length > 0) {
-    var index = this._job.config.fileSelection[0];
-    var record = this._job.config.retrievalRecord.files[index];
-    if (record.fileName == '(clipboard)') {
-      this._projectName = $.i18n('core-index-import/clipboard');
-    } else {
-      this._projectName = jQuery.trim(record.fileName.replace(/[\._-]/g, ' ').replace(/\s+/g, ' '));
-    }
-  }
-  if (this._projectName) {
-    this._parsingPanelElmts.projectNameInput[0].value = this._projectName;
-  }
-
-  this._createProjectUI.showCustomPanel(this._parsingPanel);
-};
-
-Refine.SPARQLImportingController.prototype._prepareParsingPanel = function() {
-  var self = this;
-
-  this._parsingPanel.off().empty().html(
-      DOM.loadHTML("core", "scripts/index/default-importing-controller/parsing-panel.html"));
-
-  this._parsingPanelElmts = DOM.bind(this._parsingPanel);
-  this._parsingPanelElmts.startOverButton.on('click',function() {
-    self._startOver();
-  });
-  this._parsingPanelElmts.progressPanel.hide();
-
-  this._parsingPanelElmts.previousButton.html($.i18n('core-buttons/previous'));
-  this._parsingPanelElmts.startOverButton.html($.i18n('core-buttons/startover'));
-  this._parsingPanelElmts.nextButton.html($.i18n('core-buttons/create-project'));
-  $('#or-import-parsopt').text($.i18n('core-index-import/parsing-options'));
-  $('#or-import-projname').html($.i18n('core-index-import/project-name'));
-  $('#or-import-projtags').html($.i18n('core-index-import/project-tags'));
-  $('#or-import-updating').text($.i18n('core-index-import/updating-preview'));
-  $('#or-import-parseas').text($.i18n('core-index-import/parse-as'));
-
-  //tags dropdown
-  $("#tagsInput").select2({
-    data: Refine.TagsManager._getAllProjectTags() ,
-    tags: true,
-    tokenSeparators: [",", " "]
-  });
-  
-  this._parsingPanelResizer = function() {
-    var elmts = self._parsingPanelElmts;
-    var width = self._parsingPanel.width();
-    var height = self._parsingPanel.height();
-    var headerHeight = elmts.wizardHeader.outerHeight(true);
-    var controlPanelHeight = 300;
-
-    elmts.dataPanel
-    .css("left", "0px")
-    .css("top", headerHeight + "px")
-    .css("width", (width - DOM.getHPaddings(elmts.dataPanel)) + "px")
-    .css("height", (height - headerHeight - controlPanelHeight - DOM.getVPaddings(elmts.dataPanel)) + "px");
-    elmts.progressPanel
-    .css("left", "0px")
-    .css("top", headerHeight + "px")
-    .css("width", (width - DOM.getHPaddings(elmts.progressPanel)) + "px")
-    .css("height", (height - headerHeight - controlPanelHeight - DOM.getVPaddings(elmts.progressPanel)) + "px");
-
-    elmts.controlPanel
-    .css("left", "0px")
-    .css("top", (height - controlPanelHeight) + "px")
-    .css("width", (width - DOM.getHPaddings(elmts.controlPanel)) + "px")
-    .css("height", (controlPanelHeight - DOM.getVPaddings(elmts.controlPanel)) + "px");
-  };
-
-  $(window).on('resize',this._parsingPanelResizer);
-  this._parsingPanelResizer();
-
-  var formats = this._job.config.rankedFormats;
-  var createFormatTab = function(format) {
-    var formatLabelKey =Refine.importingConfig.formats[format].label;
-    var tab = $('<div>')
-    .text( $.i18n(formatLabelKey))
-    .attr("format", format)
-    .addClass("default-importing-parsing-control-panel-format")
-    .appendTo(self._parsingPanelElmts.formatsContainer)
-    .on('click',function() {
-      self._selectFormat(format);
-    });
-
-    if (format == self._format) {
-      tab.addClass("selected");
-    }
-  };
-  for (var i = 0; i < formats.length; i++) {
-    createFormatTab(formats[i]);
-  }
-  this._selectFormat(this._format);
-};
-
-Refine.SPARQLImportingController.prototype._disposeParserUI = function() {
-  if (this._formatParserUI) {
-    this._formatParserUI.dispose();
-    delete this._formatParserUI;
-  }
-  if (this._parsingPanelElmts) {
-    this._parsingPanelElmts.optionsContainer.off().empty();
-    this._parsingPanelElmts.progressPanel.off();
-    this._parsingPanelElmts.dataPanel.off().empty();
-  }
-};
-
-Refine.SPARQLImportingController.prototype._selectFormat = function(newFormat) {
-  if (newFormat == this._format && (this._formatParserUI)) {
-    // The new format is the same as the existing one.
-    return;
-  }
-
-  var uiClass = Refine.JsonParserUI;
-  if (uiClass) {
-    var self = this;
-    this._ensureFormatParserUIHasInitializationData(newFormat, function() {
-      self._disposeParserUI();
-      self._parsingPanelElmts.formatsContainer
-      .find(".default-importing-parsing-control-panel-format")
-      .removeClass("selected")
-      .each(function() {
-        if (this.getAttribute("format") == newFormat) {
-          $(this).addClass("selected");
-        }
-      });
-
-      self._format = newFormat;
-      self._formatParserUI = new uiClass(
-        self,
-        self._jobID,
-        self._job,
-        self._format,
-        self._parserOptions[newFormat],
-        self._parsingPanelElmts.dataPanel,
-        self._parsingPanelElmts.progressPanel,
-        self._parsingPanelElmts.optionsContainer
-      );
-    });
-  }
-};
-
-Refine.SPARQLImportingController.prototype._ensureFormatParserUIHasInitializationData = function(format, onDone) {
-  if (!(format in this._parserOptions)) {
-    var self = this;
-    var dismissBusy = DialogSystem.showBusy($.i18n('core-index-import/inspecting'));
-    Refine.wrapCSRF(function(token) {
+  Refine.postCSRF(
+    "command/core/create-importing-job",
+    null,
+    function(data) {
+      Refine.wrapCSRF(function(token) {
         $.post(
-        "command/core/importing-controller?" + $.param({
-            "controller": "core/default-importing-controller",
-            "jobID": self._jobID,
+            "command/core/importing-controller?" + $.param({
+            "controller": "sparql/sparql-importing-controller",
             "subCommand": "initialize-parser-ui",
-            "format": format,
+            "endpoint" : JSON.stringify(doc.endpoint),
+            "query" : JSON.stringify(doc.query),
             "csrf_token": token
-        }),
-        null,
-        function(data) {
-            dismissBusy();
+            }),
+            null,
 
-            if (data.options) {
-            self._parserOptions[format] = data.options;
-            onDone();
-            }
-        },
-        "json"
-        )
-        .fail(function() {
-            dismissBusy();
-            alert($.i18n('core-views/check-format'));
-        });
-    });
-  } else {
-    onDone();
-  }
+            function(data2) {
+                dismiss();
+
+                if (data2.status == 'ok') {
+                    self._doc = doc;
+                    self._jobID = data.jobID;
+                    self._options = data2.options;
+
+                    self._showParsingPanel();
+                } else {
+                    alert(data2.message);
+                }
+            },
+            "json"
+        );
+      });
+    },
+    "json"
+  );
 };
 
-Refine.SPARQLImportingController.prototype.updateFormatAndOptions = function(options, callback, finallyCallBack) {
+Refine.SPARQLImportingController.prototype.getOptions = function() {
+  var options = {
+    endpoint: this._doc.endpoint,
+    query: this._doc.query,
+  };
+
+  return options;
+};
+
+Refine.SPARQLImportingController.prototype._showParsingPanel = function() {
   var self = this;
-  Refine.wrapCSRF(function(token) {
-    $.post(
+  
+  this._parsingPanel.off().empty().html(
+      DOM.loadHTML("sparql", "scripts/index/sparql-parsing-panel.html"));
+      
+  this._parsingPanelElmts = DOM.bind(this._parsingPanel);
+
+  this._parsingPanelElmts.startOverButton.html($.i18n('sparql-parsing/start-over'));
+  this._parsingPanelElmts.sparql_conf_pars.html($.i18n('sparql-parsing/conf-pars'));
+  this._parsingPanelElmts.sparql_proj_name.html($.i18n('sparql-parsing/proj-name'));
+  this._parsingPanelElmts.createProjectButton.html($.i18n('sparql-parsing/create-proj'));
+  this._parsingPanelElmts.sparql_options.html($.i18n('sparql-parsing/option'));
+  this._parsingPanelElmts.previewButton.html($.i18n('sparql-parsing/preview-button'));
+  this._parsingPanelElmts.sparql_updating.html($.i18n('sparql-parsing/updating-preview'));
+  this._parsingPanelElmts.sparql_discard_next.html($.i18n('sparql-parsing/discard-next'));
+  this._parsingPanelElmts.sparql_discard.html($.i18n('sparql-parsing/discard'));
+  this._parsingPanelElmts.sparql_limit_next.html($.i18n('sparql-parsing/limit-next'));
+  this._parsingPanelElmts.sparql_limit.html($.i18n('sparql-parsing/limit'));
+  this._parsingPanelElmts.sparql_store_row.html($.i18n('sparql-parsing/store-row'));
+  this._parsingPanelElmts.sparql_store_cell.html($.i18n('sparql-parsing/store-cell'));
+  this._parsingPanelElmts.sparql_disable_auto_preview.text($.i18n('sparql-parsing/disable-auto-preview'));
+  
+  if (this._parsingPanelResizer) {
+      $(window).off('resize', this._parsingPanelResizer);
+    }
+
+    this._parsingPanelResizer = function() {
+      var elmts = self._parsingPanelElmts;
+      var width = self._parsingPanel.width();
+      var height = self._parsingPanel.height();
+      var headerHeight = elmts.wizardHeader.outerHeight(true);
+      var controlPanelHeight = 250;
+
+      elmts.dataPanel
+      .css("left", "0px")
+      .css("top", headerHeight + "px")
+      .css("width", (width - DOM.getHPaddings(elmts.dataPanel)) + "px")
+      .css("height", (height - headerHeight - controlPanelHeight - DOM.getVPaddings(elmts.dataPanel)) + "px");
+      elmts.progressPanel
+      .css("left", "0px")
+      .css("top", headerHeight + "px")
+      .css("width", (width - DOM.getHPaddings(elmts.progressPanel)) + "px")
+      .css("height", (height - headerHeight - controlPanelHeight - DOM.getVPaddings(elmts.progressPanel)) + "px");
+
+      elmts.controlPanel
+      .css("left", "0px")
+      .css("top", (height - controlPanelHeight) + "px")
+      .css("width", (width - DOM.getHPaddings(elmts.controlPanel)) + "px")
+      .css("height", (controlPanelHeight - DOM.getVPaddings(elmts.controlPanel)) + "px");
+    };
+
+    $(window).on('resize',this._parsingPanelResizer);
+    this._parsingPanelResizer();
+
+    this._parsingPanelElmts.startOverButton.on('click',function() {
+      // explicitly cancel the import job
+      Refine.CreateProjectUI.cancelImportingJob(self._jobID);
+
+      delete self._jobID;
+      delete self._options;
+
+      self._createProjectUI.showSourceSelectionPanel();
+    });
+    
+    this._parsingPanelElmts.createProjectButton.on('click',function() { self._createProject(); });
+    this._parsingPanelElmts.previewButton.on('click',function() { self._updatePreview(); });
+
+    if (this._options.limit > 0) {
+      this._parsingPanelElmts.limitCheckbox.prop("checked", true);
+      this._parsingPanelElmts.limitInput[0].value = this._options.limit.toString();
+    }
+    if (this._options.skipDataLines > 0) {
+      this._parsingPanelElmts.skipCheckbox.prop("checked", true);
+      this._parsingPanelElmts.skipInput.value[0].value = this._options.skipDataLines.toString();
+    }
+    if (this._options.storeBlankRows) {
+      this._parsingPanelElmts.storeBlankRowsCheckbox.prop("checked", true);
+    }
+    if (this._options.storeBlankCellsAsNulls) {
+      this._parsingPanelElmts.storeBlankCellsAsNullsCheckbox.prop("checked", true);
+    }
+
+    if (this._options.disableAutoPreview) {
+      this._parsingPanelElmts.disableAutoPreviewCheckbox.prop('checked', true);
+    }
+
+    // If disableAutoPreviewCheckbox is not checked, we will schedule an automatic update
+    var onChange = function() {
+      if (!self._parsingPanelElmts.disableAutoPreviewCheckbox[0].checked)
+      {
+        self._scheduleUpdatePreview();
+      }
+    };
+    this._parsingPanel.find("input").on("change", onChange);
+    this._parsingPanel.find("select").on("change", onChange);
+
+    this._createProjectUI.showCustomPanel(this._parsingPanel);
+    this._updatePreview();
+};
+
+Refine.SPARQLImportingController.prototype._scheduleUpdatePreview = function() {
+    if (this._timerID != null) {
+      window.clearTimeout(this._timerID);
+      this._timerID = null;
+    }
+
+    var self = this;
+    this._timerID = window.setTimeout(function() {
+      self._timerID = null;
+      self._updatePreview();
+    }, 500); // 0.5 second
+  };
+
+Refine.SPARQLImportingController.prototype._updatePreview = function() {
+    var self = this;
+    this._parsingPanelElmts.dataPanel.hide();
+    this._parsingPanelElmts.progressPanel.show();
+
+    Refine.wrapCSRF(function(token) {
+      $.post(
       "command/core/importing-controller?" + $.param({
-        "controller": "core/default-importing-controller",
+        "controller": "sparql/sparql-importing-controller",
         "jobID": self._jobID,
-        "subCommand": "update-format-and-options",
+        "subCommand": "parse-preview",
         "csrf_token": token
       }),
-      {
-        "format" : self._format,
-        "options" : JSON.stringify(options)
-      },
-      function(o) {
-        if (o.status == 'error') {
-          if (o.message) {
-            alert(o.message);
-          } else {
-            var messages = [];
-            $.each(o.errors, function() { messages.push(this.message); });
-            alert(messages.join('\n\n'));
+      
+        {
+          "options" : JSON.stringify(self.getOptions())
+        },
+
+        function(result) {
+            if (result.status == "ok") {
+                self._getPreviewData(function(projectData) {
+                self._parsingPanelElmts.progressPanel.hide();
+                self._parsingPanelElmts.dataPanel.show();
+
+                new Refine.PreviewTable(projectData, self._parsingPanelElmts.dataPanel.off().empty());
+            });
+            } else {
+
+            alert('Errors:\n' +  (result.message) ? result.message : Refine.CreateProjectUI.composeErrorMessage(job));
+            self._parsingPanelElmts.progressPanel.hide();
+
+            Refine.CreateProjectUI.cancelImportingJob(self._jobID);
+
+            delete self._jobID;
+            delete self._options;
+
+            self._createProjectUI.showSourceSelectionPanel();
+
             }
-            if(finallyCallBack){
-              finallyCallBack();
-            }
-          }
-          callback(o);
         },
         "json"
-    ).fail(() => { alert($.i18n('core-index-parser/update-format-failed')); });
-  });
-};
+        );
+    });
+  };
 
-Refine.SPARQLImportingController.prototype.getPreviewData = function(callback, numRows) {
+Refine.SPARQLImportingController.prototype._getPreviewData = function(callback, numRows) {
   var self = this;
   var result = {};
 
@@ -392,7 +283,6 @@ Refine.SPARQLImportingController.prototype._createProject = function() {
     var projectTags = $("#tagsInput").val();
 
     var self = this;
-    var options = this._formatParserUI.getOptions();
     options.projectName = projectName;
     options.projectTags = projectTags;
     Refine.wrapCSRF(function(token) {

@@ -30,7 +30,6 @@ function init() {
     module,
     [
       "scripts/index/sparql-importing-controller.js",
-      "scripts/index/Sparql.js",
       "scripts/index/sparql-source-ui.js"
     ]
   );
