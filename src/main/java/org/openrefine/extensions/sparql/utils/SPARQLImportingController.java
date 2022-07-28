@@ -12,6 +12,7 @@ import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -19,6 +20,7 @@ import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.google.refine.ProjectManager;
 import com.google.refine.ProjectMetadata;
 import com.google.refine.RefineServlet;
 import com.google.refine.commands.HttpUtilities;
@@ -83,7 +85,7 @@ public class SPARQLImportingController implements ImportingController {
                 HttpUtilities.respond(response, "error", "Unable to parse preview");
             }
         } else if ("create-project".equals(subCommand)) {
-            // doCreateProject(request, response, parameters);
+            doCreateProject(request, response, parameters);
         } else {
             HttpUtilities.respond(response, "error", "No such sub command");
         }
@@ -196,7 +198,7 @@ public class SPARQLImportingController implements ImportingController {
         String endpoint = options.get("endpoint").asText();
         String query = options.get("query").asText();
 
-        setProgress(job, endpoint, 0);
+        setProgress(job, "Reading", 0);
 
         TabularImportingParserBase.readTable(
                 project,
@@ -205,7 +207,7 @@ public class SPARQLImportingController implements ImportingController {
                 limit,
                 options,
                 exceptions);
-        setProgress(job, endpoint, 100);
+        setProgress(job, "Reading", 100);
 
     }
 
@@ -265,6 +267,91 @@ public class SPARQLImportingController implements ImportingController {
             }
 
         }
+
+    }
+
+    private void doCreateProject(HttpServletRequest request, HttpServletResponse response, Properties parameters)
+            throws ServletException, IOException {
+
+        long jobID = Long.parseLong(parameters.getProperty("jobID"));
+        final ImportingJob job = ImportingManager.getJob(jobID);
+        if (job == null) {
+            HttpUtilities.respond(response, "error", "No such import job");
+            return;
+        }
+
+        job.updating = true;
+        final ObjectNode optionObj = ParsingUtilities.evaluateJsonStringToObjectNode(
+                request.getParameter("options"));
+
+        final List<Exception> exceptions = new LinkedList<Exception>();
+
+        job.setState("creating-project");
+
+        final Project project = new Project();
+        new Thread() {
+
+            @Override
+            public void run() {
+                ProjectMetadata pm = new ProjectMetadata();
+                pm.setName(JSONUtilities.getString(optionObj, "projectName", "Untitled"));
+                pm.setEncoding(JSONUtilities.getString(optionObj, "encoding", "UTF-8"));
+
+                try {
+                    parseCreate(
+                            project,
+                            pm,
+                            job,
+                            DEFAULT_PROJECT_LIMIT,
+                            optionObj,
+                            exceptions);
+                } catch (IOException e) {
+                    logger.error(ExceptionUtils.getStackTrace(e));
+                }
+
+                if (!job.canceled) {
+                    if (exceptions.size() > 0) {
+                        job.setError(exceptions);
+                    } else {
+                        project.update(); // update all internal models, indexes, caches, etc.
+
+                        ProjectManager.singleton.registerProject(project, pm);
+
+                        job.setState("created-project");
+                        job.setProjectID(project.id);
+                    }
+
+                    job.touch();
+                    job.updating = false;
+                }
+            }
+        }.start();
+
+        HttpUtilities.respond(response, "ok", "done");
+    }
+
+    private static void parseCreate(
+            Project project,
+            ProjectMetadata metadata,
+            final ImportingJob job,
+            int limit,
+            ObjectNode options,
+            List<Exception> exceptions) throws IOException {
+
+        JSONUtilities.safePut(options, "headerLines", 0);
+        String endpoint = options.get("endpoint").asText();
+        String query = options.get("query").asText();
+
+        setProgress(job, "Reading", 0);
+
+        TabularImportingParserBase.readTable(
+                project,
+                job,
+                new SPARQLQueryResultPreviewReader(job, endpoint, query),
+                limit,
+                options,
+                exceptions);
+        setProgress(job, "Reading", 100);
 
     }
 

@@ -272,37 +272,31 @@ Refine.SPARQLImportingController.prototype._getPreviewData = function(callback, 
 };
 
 Refine.SPARQLImportingController.prototype._createProject = function() {
-  if ((this._formatParserUI) && this._formatParserUI.confirmReadyToCreateProject()) {
-    var projectName = jQuery.trim(this._parsingPanelElmts.projectNameInput[0].value);
-    if (projectName.length === 0) {
-      window.alert($.i18n('core-index-import/warning-name'));
-      this._parsingPanelElmts.projectNameInput.focus();
-      return;
-    }
+  var projectName = $.trim(this._parsingPanelElmts.projectNameInput[0].value);
+  if (projectName.length == 0) {
+    window.alert("Please name the project.");
+    this._parsingPanelElmts.projectNameInput.focus();
+    return;
+  }
 
-    var projectTags = $("#tagsInput").val();
-
-    var self = this;
-    options.projectName = projectName;
-    options.projectTags = projectTags;
-    Refine.wrapCSRF(function(token) {
-        $.post(
+  var self = this;
+  var options = this.getOptions();
+  options.projectName = projectName;
+  Refine.wrapCSRF(function(token) {
+    $.post(
         "command/core/importing-controller?" + $.param({
-            "controller": "core/default-importing-controller",
-            "jobID": self._jobID,
-            "subCommand": "create-project",
-            "csrf_token": token
+        "controller": "sparql/sparql-importing-controller",
+        "jobID": self._jobID,
+        "subCommand": "create-project",
+        "csrf_token": token
         }),
         {
-            "format" : self._format,
-            "options" : JSON.stringify(options)
+        "options" : JSON.stringify(options)
         },
         function(o) {
-            if (o.status == 'error') {
+        if (o.status == 'error') {
             alert(o.message);
-            return;
-            }
-            
+        } else {
             var start = new Date();
             var timerID = window.setInterval(
             function() {
@@ -314,53 +308,32 @@ Refine.SPARQLImportingController.prototype._createProject = function() {
                     return "projectID" in job.config;
                     },
                     function(jobID, job) {
+                    window.clearInterval(timerID);
                     Refine.CreateProjectUI.cancelImportingJob(jobID);
                     document.location = "project?project=" + job.config.projectID;
                     },
                     function(job) {
-                    alert($.i18n('core-index-import/errors')+'\n' + Refine.CreateProjectUI.composeErrorMessage(job));
-                    self._onImportJobReady();
+                    alert(Refine.CreateProjectUI.composeErrorMessage(job));
                     }
                 );
             },
             1000
             );
-            self._createProjectUI.showImportProgressPanel($.i18n('core-index-import/creating-proj'), function() {
+            self._createProjectUI.showImportProgressPanel($.i18n('sparql-import/creating'), function() {
             // stop the timed polling
             window.clearInterval(timerID);
 
             // explicitly cancel the import job
-            Refine.CreateProjectUI.cancelImportingJob(self._jobID);
+            Refine.CreateProjectUI.cancelImportingJob(jobID);
+
+            delete self._jobID;
+            delete self._options;
 
             self._createProjectUI.showSourceSelectionPanel();
             });
+        }
         },
         "json"
-        );
-    });
-  }
-};
-
-Refine.TagsManager = {};
-Refine.TagsManager.allProjectTags = [];
-
-Refine.TagsManager._getAllProjectTags = function() {
-    var self = this;
-    if (self.allProjectTags.length === 0) {
-        jQuery.ajax({
-             url : "command/core/get-all-project-tags",
-             success : function(result) {
-                 var array = result.tags.sort(function (a, b) {
-                     return a.toLowerCase().localeCompare(b.toLowerCase());
-                     });
-                                
-                 array.map(function(item){
-                     self.allProjectTags.push(item);
-                 });
-                 
-                 },
-                 async : false
-                 });
-        }
-    return self.allProjectTags;
+    );
+  });
 };
