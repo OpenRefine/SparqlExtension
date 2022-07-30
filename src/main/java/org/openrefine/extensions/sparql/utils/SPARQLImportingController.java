@@ -4,7 +4,6 @@ package org.openrefine.extensions.sparql.utils;
 import java.io.IOException;
 import java.io.Writer;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
@@ -46,6 +45,7 @@ public class SPARQLImportingController implements ImportingController {
     protected RefineServlet servlet;
     public static int DEFAULT_PREVIEW_LIMIT = 100;
     public static int DEFAULT_PROJECT_LIMIT = 0;
+    public static int resultSize;
 
     @Override
     public void init(RefineServlet servlet) {
@@ -200,16 +200,16 @@ public class SPARQLImportingController implements ImportingController {
         String endpoint = options.get("endpoint").asText();
         String query = options.get("query").asText();
 
-        setProgress(job, "Reading", 0);
+        setProgress(job, "SPARQL", 0);
 
         TabularImportingParserBase.readTable(
                 project,
                 job,
-                new SPARQLQueryResultPreviewReader(job, endpoint, query),
+                new SPARQLQueryResultPreviewReader(job, endpoint, query, 100),
                 limit,
                 options,
                 exceptions);
-        setProgress(job, "Reading", 100);
+        setProgress(job, "SPARQL", 100);
 
     }
 
@@ -224,16 +224,21 @@ public class SPARQLImportingController implements ImportingController {
         HttpUrl urlBase;
         JsonNode results;
         String query;
-        private int indexRow = 0;
-        List<Object> rowsOfCells;
+        private List<List<Object>> rowsOfCells = null;
         JsonNode firstEntry;
-        List<Object> columnNames = new ArrayList<Object>();
+        List<String> columnNames = new ArrayList<String>();
+        private int batchRowStart = 0;
+        private boolean end = false;
+        private boolean usedHeaders = false;
+        private int nextRow = 0;
+        private final int batchSize;
 
-        public SPARQLQueryResultPreviewReader(ImportingJob job, String endpoint, String query) throws IOException {
+        public SPARQLQueryResultPreviewReader(ImportingJob job, String endpoint, String query, int batchSize) throws IOException {
 
             this.job = job;
             this.endpoint = endpoint;
             this.query = query;
+            this.batchSize = batchSize;
             getResults();
 
         }
@@ -249,30 +254,58 @@ public class SPARQLImportingController implements ImportingController {
             Response response = client.newCall(request).execute();
             JsonNode jsonNode = new ObjectMapper().readTree(response.body().string());
             results = jsonNode.path("results").path("bindings");
+            resultSize = results.size();
             firstEntry = results.get(0);
             Iterator<String> iterator = firstEntry.fieldNames();
             iterator.forEachRemaining(e -> columnNames.add(e));
+            List<String> jsonRows = new ArrayList<String>();
+
+            for (int i = 0; i < resultSize; i++) {
+                JsonNode jsonObject = results.get(i);
+                Iterator<JsonNode> nodeIterator = jsonObject.elements();
+                nodeIterator.forEachRemaining(valueNode -> {
+                    if (valueNode.has("value"))
+                        jsonRows.add(valueNode.get("value").asText());
+                });
+            }
 
         }
 
         @Override
         public List<Object> getNextRowOfCells() throws IOException {
 
-            if (results.size() > 0) {
-                setProgress(job, "Reading", 100 * indexRow / results.size());
-            } else if (indexRow == results.size()) {
-                setProgress(job, "Reading", 100);
+            if (!usedHeaders) {
+                List<Object> row = new ArrayList<Object>();
+                for (String columnName : columnNames) {
+                    row.add(columnName);
+                }
+                usedHeaders = true;
+
+                return row;
             }
 
-            if (indexRow < results.size()) {
-                rowsOfCells = Collections.singletonList(results.get(indexRow++).findValue("value").asText());
+            if (rowsOfCells == null || (nextRow >= batchRowStart + rowsOfCells.size() && !end)) {
+                int newBatchRowStart = batchRowStart + (rowsOfCells == null ? 0 : rowsOfCells.size());
+                rowsOfCells = getRowsOfCells(newBatchRowStart);
+                batchRowStart = newBatchRowStart;
+                setProgress(job, "SPARQL", -1);
+            }
 
-                return rowsOfCells;
-
+            if (rowsOfCells != null && nextRow - batchRowStart < rowsOfCells.size()) {
+                return rowsOfCells.get(nextRow++ - batchRowStart);
             } else {
+                if (logger.isDebugEnabled()) {
+                    logger.debug("nextRow:{}, batchRowStart:{}", nextRow, batchRowStart);
+                }
+
                 return null;
             }
 
+        }
+
+        private List<List<Object>> getRowsOfCells(int newBatchRowStart) {
+            // TODO Auto-generated method stub
+            return null;
         }
 
     }
@@ -354,7 +387,7 @@ public class SPARQLImportingController implements ImportingController {
         TabularImportingParserBase.readTable(
                 project,
                 job,
-                new SPARQLQueryResultPreviewReader(job, endpoint, query),
+                new SPARQLQueryResultPreviewReader(job, endpoint, query, resultSize),
                 limit,
                 options,
                 exceptions);
