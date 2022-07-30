@@ -3,7 +3,9 @@ package org.openrefine.extensions.sparql.utils;
 
 import java.io.IOException;
 import java.io.Writer;
+import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Properties;
@@ -224,6 +226,8 @@ public class SPARQLImportingController implements ImportingController {
         String query;
         private int indexRow = 0;
         List<Object> rowsOfCells;
+        JsonNode firstEntry;
+        List<Object> columnNames = new ArrayList<Object>();
 
         public SPARQLQueryResultPreviewReader(ImportingJob job, String endpoint, String query) throws IOException {
 
@@ -245,6 +249,9 @@ public class SPARQLImportingController implements ImportingController {
             Response response = client.newCall(request).execute();
             JsonNode jsonNode = new ObjectMapper().readTree(response.body().string());
             results = jsonNode.path("results").path("bindings");
+            firstEntry = results.get(0);
+            Iterator<String> iterator = firstEntry.fieldNames();
+            iterator.forEachRemaining(e -> columnNames.add(e));
 
         }
 
