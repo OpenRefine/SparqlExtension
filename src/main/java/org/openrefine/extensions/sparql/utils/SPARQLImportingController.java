@@ -309,26 +309,24 @@ public class SPARQLImportingController implements ImportingController {
 
             if (jsonRows != null && !jsonRows.isEmpty() && jsonRows.size() > 0) {
 
-                for (String jsonRow : jsonRows) {
-                    List<Object> rowOfCells = new ArrayList<Object>(jsonRows.size());
+                List<Object> rowOfCells = new ArrayList<Object>(jsonRows.size());
 
-                    for (int j = 0; j < jsonRows.size() && j < columnNames.size(); j++) {
+                for (int j = 0; j < jsonRows.size() && j < columnNames.size(); j++) {
 
-                        String text = jsonRows.get(j);
-                        if (text == null || text.isEmpty()) {
-                            rowOfCells.add(null);
-                        } else {
+                    String text = jsonRows.get(j);
+                    if (text == null || text.isEmpty()) {
+                        rowOfCells.add(null);
+                    } else {
 
-                            rowOfCells.add(text);
-                        }
-
+                        rowOfCells.add(text);
                     }
-                    rowsOfCells.add(rowOfCells);
 
                 }
+                rowsOfCells.add(rowOfCells);
 
             }
-            return null;
+            end = jsonRows.size() < batchSize + 1;
+            return rowsOfCells;
         }
 
     }
