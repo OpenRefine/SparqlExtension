@@ -232,6 +232,7 @@ public class SPARQLImportingController implements ImportingController {
         private boolean usedHeaders = false;
         private int nextRow = 0;
         private final int batchSize;
+        List<String> jsonRows = new ArrayList<String>();
 
         public SPARQLQueryResultPreviewReader(ImportingJob job, String endpoint, String query, int batchSize) throws IOException {
 
@@ -258,7 +259,6 @@ public class SPARQLImportingController implements ImportingController {
             firstEntry = results.get(0);
             Iterator<String> iterator = firstEntry.fieldNames();
             iterator.forEachRemaining(e -> columnNames.add(e));
-            List<String> jsonRows = new ArrayList<String>();
 
             for (int i = 0; i < resultSize; i++) {
                 JsonNode jsonObject = results.get(i);
@@ -304,7 +304,30 @@ public class SPARQLImportingController implements ImportingController {
         }
 
         private List<List<Object>> getRowsOfCells(int newBatchRowStart) {
-            // TODO Auto-generated method stub
+
+            List<List<Object>> rowsOfCells = new ArrayList<List<Object>>(batchSize);
+
+            if (jsonRows != null && !jsonRows.isEmpty() && jsonRows.size() > 0) {
+
+                for (String jsonRow : jsonRows) {
+                    List<Object> rowOfCells = new ArrayList<Object>(jsonRows.size());
+
+                    for (int j = 0; j < jsonRows.size() && j < columnNames.size(); j++) {
+
+                        String text = jsonRows.get(j);
+                        if (text == null || text.isEmpty()) {
+                            rowOfCells.add(null);
+                        } else {
+
+                            rowOfCells.add(text);
+                        }
+
+                    }
+                    rowsOfCells.add(rowOfCells);
+
+                }
+
+            }
             return null;
         }
 
