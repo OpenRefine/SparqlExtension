@@ -139,10 +139,7 @@ Refine.SPARQLImportingController.prototype._showParsingPanel = function() {
 
     // If disableAutoPreviewCheckbox is not checked, we will schedule an automatic update
     var onChange = function() {
-      if (!self._parsingPanelElmts.disableAutoPreviewCheckbox[0].checked)
-      {
         self._scheduleUpdatePreview();
-      }
     };
     this._parsingPanel.find("input").on("change", onChange);
     this._parsingPanel.find("select").on("change", onChange);
