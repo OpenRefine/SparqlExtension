@@ -286,7 +286,7 @@ public class SPARQLImportingController implements ImportingController {
         TabularImportingParserBase.readTable(
                 project,
                 job,
-                new SPARQLQueryResultPreviewReader(job, endpoint, query, 100),
+                new SPARQLQueryResultPreviewReader(job, endpoint, query, 0),
                 limit,
                 options,
                 exceptions);

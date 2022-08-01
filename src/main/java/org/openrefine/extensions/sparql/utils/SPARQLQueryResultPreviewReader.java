@@ -30,7 +30,7 @@ public class SPARQLQueryResultPreviewReader implements TableDataReader {
     private HttpUrl urlBase;
     private JsonNode results;
     private String query;
-    private final int batchSize;
+    private int batchSize;
     private List<List<Object>> rowsOfCells = null;
     private int nextRow = 0;
     private int batchRowStart = 0;
@@ -42,7 +42,6 @@ public class SPARQLQueryResultPreviewReader implements TableDataReader {
     private List<String> columns = new ArrayList<String>();
     private JsonNode firstEntry;
     private List<JsonColumn> jsonColumns = new ArrayList<JsonColumn>();
-    private boolean usedHeaders = false;
 
     public SPARQLQueryResultPreviewReader(ImportingJob job, String endpoint, String query, int batchSize) throws IOException {
 
@@ -70,6 +69,10 @@ public class SPARQLQueryResultPreviewReader implements TableDataReader {
         Iterator<String> iterator = firstEntry.fieldNames();
         iterator.forEachRemaining(e -> columns.add(e));
         jsonColumns.add(new JsonColumn(columns));
+
+        if (batchSize == 0) {
+            batchSize = resultSize;
+        }
 
         for (int i = 0; i < resultSize; i++) {
             JsonNode jsonObject = results.get(i);
@@ -124,7 +127,6 @@ public class SPARQLQueryResultPreviewReader implements TableDataReader {
     }
 
     private List<List<Object>> getRowsOfCells(int startRow) throws IOException {
-        logger.info("Entry getRowsOfCells::startRow:" + startRow);
 
         List<List<Object>> rowsOfCells = new ArrayList<List<Object>>(batchSize);
 
@@ -138,22 +140,20 @@ public class SPARQLQueryResultPreviewReader implements TableDataReader {
                 row = jsonRow.getValues();
             }
             List<Object> rowOfCells = new ArrayList<Object>(row.size());
-            logger.info("For loop getRowsOfCells::rows:{}", row);
             
             while (start <= row.size() / columns.size()) {
                 int end = start + columns.size() - 1;
                 for (int i = start; i <= end; i++) {
 
                     rowOfCells.add(row.get(i));
-                    rowsOfCells.add(rowOfCells);
                 }
-               // rowsOfCells.add(rowOfCells);
+                rowsOfCells.add(rowOfCells);
+                rowOfCells = new ArrayList<Object>(row.size());
                start = end + 1;
             }
 
        }
         end = jsonRows.size() < batchSize + 1;
-        logger.info("Exit::getRowsOfCells::rowsOfCells:{}", rowsOfCells);
         return rowsOfCells;
 
     }
