@@ -3,7 +3,6 @@ package org.openrefine.extensions.sparql.utils;
 
 import java.io.IOException;
 import java.io.Writer;
-import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Properties;
@@ -17,26 +16,18 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.fasterxml.jackson.core.JsonGenerator;
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.refine.ProjectManager;
 import com.google.refine.ProjectMetadata;
 import com.google.refine.RefineServlet;
 import com.google.refine.commands.HttpUtilities;
 import com.google.refine.importers.TabularImportingParserBase;
-import com.google.refine.importers.TabularImportingParserBase.TableDataReader;
 import com.google.refine.importing.ImportingController;
 import com.google.refine.importing.ImportingJob;
 import com.google.refine.importing.ImportingManager;
 import com.google.refine.model.Project;
 import com.google.refine.util.JSONUtilities;
 import com.google.refine.util.ParsingUtilities;
-
-import okhttp3.HttpUrl;
-import okhttp3.OkHttpClient;
-import okhttp3.Request;
-import okhttp3.Response;
 
 public class SPARQLImportingController implements ImportingController {
 
@@ -198,80 +189,28 @@ public class SPARQLImportingController implements ImportingController {
         String endpoint = options.get("endpoint").asText();
         String query = options.get("query").asText();
 
-        setProgress(job, "Reading", 0);
+        setProgress(job, "SPARQL", 0);
 
         TabularImportingParserBase.readTable(
                 project,
                 job,
-                new SPARQLQueryResultPreviewReader(job, endpoint, query),
+                new SPARQLQueryResultPreviewReader(job, endpoint, query, 100),
                 limit,
                 options,
                 exceptions);
-        setProgress(job, "Reading", 100);
+        setProgress(job, "SPARQL", 100);
 
     }
 
-    static private void setProgress(ImportingJob job, String category, int percent) {
-        job.setProgress(percent, "Reading " + category);
-    }
-
-    static protected class SPARQLQueryResultPreviewReader implements TableDataReader {
-
-        final ImportingJob job;
-        String endpoint;
-        HttpUrl urlBase;
-        JsonNode results;
-        String query;
-        private int indexRow = 0;
-        List<Object> rowsOfCells;
-
-        public SPARQLQueryResultPreviewReader(ImportingJob job, String endpoint, String query) throws IOException {
-
-            this.job = job;
-            this.endpoint = endpoint;
-            this.query = query;
-            getResults();
-
-        }
-
-        public void getResults() throws IOException {
-
-            OkHttpClient client = new OkHttpClient.Builder().build();
-            urlBase = HttpUrl.parse(endpoint).newBuilder()
-                    .addQueryParameter("query", query)
-                    .addQueryParameter("format", "json").build();
-
-            Request request = new Request.Builder().url(urlBase).build();
-            Response response = client.newCall(request).execute();
-            JsonNode jsonNode = new ObjectMapper().readTree(response.body().string());
-            results = jsonNode.path("results").path("bindings");
-
-        }
-
-        @Override
-        public List<Object> getNextRowOfCells() throws IOException {
-
-            if (results.size() > 0) {
-                setProgress(job, "Reading", 100 * indexRow / results.size());
-            } else if (indexRow == results.size()) {
-                setProgress(job, "Reading", 100);
-            }
-
-            if (indexRow < results.size()) {
-                rowsOfCells = Collections.singletonList(results.get(indexRow++).findValue("value").asText());
-
-                return rowsOfCells;
-
-            } else {
-                return null;
-            }
-
-        }
-
+    static private void setProgress(ImportingJob job, String querySource, int percent) {
+        job.setProgress(percent, "Reading " + querySource);
     }
 
     private void doCreateProject(HttpServletRequest request, HttpServletResponse response, Properties parameters)
             throws ServletException, IOException {
+        if (logger.isDebugEnabled()) {
+            logger.debug("SPARQLImportingController::doCreateProject:::{}", parameters.getProperty("jobID"));
+        }
 
         long jobID = Long.parseLong(parameters.getProperty("jobID"));
         final ImportingJob job = ImportingManager.getJob(jobID);
@@ -289,6 +228,7 @@ public class SPARQLImportingController implements ImportingController {
         job.setState("creating-project");
 
         final Project project = new Project();
+
         new Thread() {
 
             @Override
@@ -326,7 +266,6 @@ public class SPARQLImportingController implements ImportingController {
                 }
             }
         }.start();
-
         HttpUtilities.respond(response, "ok", "done");
     }
 
@@ -342,16 +281,16 @@ public class SPARQLImportingController implements ImportingController {
         String endpoint = options.get("endpoint").asText();
         String query = options.get("query").asText();
 
-        setProgress(job, "Reading", 0);
+        setProgress(job, "SPARQL", 0);
 
         TabularImportingParserBase.readTable(
                 project,
                 job,
-                new SPARQLQueryResultPreviewReader(job, endpoint, query),
+                new SPARQLQueryResultPreviewReader(job, endpoint, query, 0),
                 limit,
                 options,
                 exceptions);
-        setProgress(job, "Reading", 100);
+        setProgress(job, "SPARQL", 100);
 
     }
 

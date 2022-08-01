@@ -92,16 +92,6 @@ Refine.SPARQLImportingController.prototype._showParsingPanel = function() {
   this._parsingPanelElmts.sparql_conf_pars.html($.i18n('sparql-parsing/conf-pars'));
   this._parsingPanelElmts.sparql_proj_name.html($.i18n('sparql-parsing/proj-name'));
   this._parsingPanelElmts.createProjectButton.html($.i18n('sparql-parsing/create-proj'));
-  this._parsingPanelElmts.sparql_options.html($.i18n('sparql-parsing/option'));
-  this._parsingPanelElmts.previewButton.html($.i18n('sparql-parsing/preview-button'));
-  this._parsingPanelElmts.sparql_updating.html($.i18n('sparql-parsing/updating-preview'));
-  this._parsingPanelElmts.sparql_discard_next.html($.i18n('sparql-parsing/discard-next'));
-  this._parsingPanelElmts.sparql_discard.html($.i18n('sparql-parsing/discard'));
-  this._parsingPanelElmts.sparql_limit_next.html($.i18n('sparql-parsing/limit-next'));
-  this._parsingPanelElmts.sparql_limit.html($.i18n('sparql-parsing/limit'));
-  this._parsingPanelElmts.sparql_store_row.html($.i18n('sparql-parsing/store-row'));
-  this._parsingPanelElmts.sparql_store_cell.html($.i18n('sparql-parsing/store-cell'));
-  this._parsingPanelElmts.sparql_disable_auto_preview.text($.i18n('sparql-parsing/disable-auto-preview'));
   
   if (this._parsingPanelResizer) {
       $(window).off('resize', this._parsingPanelResizer);
@@ -146,33 +136,10 @@ Refine.SPARQLImportingController.prototype._showParsingPanel = function() {
     });
     
     this._parsingPanelElmts.createProjectButton.on('click',function() { self._createProject(); });
-    this._parsingPanelElmts.previewButton.on('click',function() { self._updatePreview(); });
-
-    if (this._options.limit > 0) {
-      this._parsingPanelElmts.limitCheckbox.prop("checked", true);
-      this._parsingPanelElmts.limitInput[0].value = this._options.limit.toString();
-    }
-    if (this._options.skipDataLines > 0) {
-      this._parsingPanelElmts.skipCheckbox.prop("checked", true);
-      this._parsingPanelElmts.skipInput.value[0].value = this._options.skipDataLines.toString();
-    }
-    if (this._options.storeBlankRows) {
-      this._parsingPanelElmts.storeBlankRowsCheckbox.prop("checked", true);
-    }
-    if (this._options.storeBlankCellsAsNulls) {
-      this._parsingPanelElmts.storeBlankCellsAsNullsCheckbox.prop("checked", true);
-    }
-
-    if (this._options.disableAutoPreview) {
-      this._parsingPanelElmts.disableAutoPreviewCheckbox.prop('checked', true);
-    }
 
     // If disableAutoPreviewCheckbox is not checked, we will schedule an automatic update
     var onChange = function() {
-      if (!self._parsingPanelElmts.disableAutoPreviewCheckbox[0].checked)
-      {
         self._scheduleUpdatePreview();
-      }
     };
     this._parsingPanel.find("input").on("change", onChange);
     this._parsingPanel.find("select").on("change", onChange);
