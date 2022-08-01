@@ -129,27 +129,29 @@ public class SPARQLQueryResultPreviewReader implements TableDataReader {
         List<List<Object>> rowsOfCells = new ArrayList<List<Object>>(batchSize);
 
         List<JsonRow> jsonRows = getRows();
+        List<String> row = new ArrayList<String>();
+        int start = 0;
 
         if (jsonRows != null && !jsonRows.isEmpty() && jsonRows.size() > 0) {
 
             for (JsonRow jsonRow : jsonRows) {
-                List<String> row = jsonRow.getValues();
-                List<Object> rowOfCells = new ArrayList<Object>(row.size());
-                logger.info("For loop getRowsOfCells::rows:{}", row);
+                row = jsonRow.getValues();
+            }
+            List<Object> rowOfCells = new ArrayList<Object>(row.size());
+            logger.info("For loop getRowsOfCells::rows:{}", row);
+            
+            while (start <= row.size() / columns.size()) {
+                int end = start + columns.size() - 1;
+                for (int i = start; i <= end; i++) {
 
-                for (int j = 0; j < row.size() && j < columns.size(); j++) {
-
-                    String text = row.get(j);
-
-                    rowOfCells.add(text);
-
+                    rowOfCells.add(row.get(i));
+                    rowsOfCells.add(rowOfCells);
                 }
-
-                rowsOfCells.add(rowOfCells);
-
+               // rowsOfCells.add(rowOfCells);
+               start = end + 1;
             }
 
-        }
+       }
         end = jsonRows.size() < batchSize + 1;
         logger.info("Exit::getRowsOfCells::rowsOfCells:{}", rowsOfCells);
         return rowsOfCells;
@@ -165,7 +167,7 @@ public class SPARQLQueryResultPreviewReader implements TableDataReader {
         List<String> values = new ArrayList<String>(columns.size());
 
         while (start <= jsonRows.size() / columns.size()) {
-            int end = start + columns.size();
+            int end = start + columns.size() - 1;
             for (int i = start; i <= end; i++) {
 
                 values.add(jsonRows.get(i));
@@ -176,7 +178,6 @@ public class SPARQLQueryResultPreviewReader implements TableDataReader {
             index++;
             start = end + 1;
         }
-
 
         return rows;
     }
