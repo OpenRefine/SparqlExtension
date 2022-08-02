@@ -141,7 +141,7 @@ public class SPARQLQueryResultPreviewReader implements TableDataReader {
             }
             List<Object> rowOfCells = new ArrayList<Object>(row.size());
             
-            while (start < row.size()) {
+            while (start <= row.size() / columns.size()) {
                 int end = start + columns.size() - 1;
                 for (int i = start; i <= end; i++) {
 
@@ -166,7 +166,7 @@ public class SPARQLQueryResultPreviewReader implements TableDataReader {
         row.setIndex(index);
         List<String> values = new ArrayList<String>(columns.size());
 
-        while (start < jsonRows.size()) {
+        while (start <= jsonRows.size() / columns.size()) {
             int end = start + columns.size() - 1;
             for (int i = start; i <= end; i++) {
 
