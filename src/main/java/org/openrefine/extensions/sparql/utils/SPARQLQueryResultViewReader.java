@@ -30,7 +30,7 @@ public class SPARQLQueryResultViewReader implements TableDataReader {
     private HttpUrl urlBase;
     private JsonNode results;
     private String query;
-    private int batchSize;
+    private final int batchSize;
     private List<List<Object>> rowsOfCells = null;
     private int nextRow = 0;
     private int batchRowStart = 0;
@@ -49,6 +49,7 @@ public class SPARQLQueryResultViewReader implements TableDataReader {
         this.endpoint = endpoint;
         this.query = query;
         getResults();
+        batchSize = resultSize + 1;
 
     }
 
@@ -68,7 +69,6 @@ public class SPARQLQueryResultViewReader implements TableDataReader {
         Iterator<String> iterator = firstEntry.fieldNames();
         iterator.forEachRemaining(e -> columns.add(e));
         jsonColumns.add(new JsonColumn(columns));
-        batchSize = resultSize;
 
         for (int i = 0; i < resultSize; i++) {
             JsonNode jsonObject = results.get(i);
