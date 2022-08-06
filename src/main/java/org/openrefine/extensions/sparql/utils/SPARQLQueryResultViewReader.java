@@ -21,9 +21,9 @@ import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.Response;
 
-public class SPARQLQueryResultPreviewReader implements TableDataReader {
+public class SPARQLQueryResultViewReader implements TableDataReader {
 
-    private static final Logger logger = LoggerFactory.getLogger("SPARQLQueryResultPreviewReader");
+    private static final Logger logger = LoggerFactory.getLogger("SPARQLQueryResultViewReader");
 
     private final ImportingJob job;
     private String endpoint;
@@ -43,13 +43,13 @@ public class SPARQLQueryResultPreviewReader implements TableDataReader {
     private JsonNode firstEntry;
     private List<JsonColumn> jsonColumns = new ArrayList<JsonColumn>();
 
-    public SPARQLQueryResultPreviewReader(ImportingJob job, String endpoint, String query, int batchSize) throws IOException {
+    public SPARQLQueryResultViewReader(ImportingJob job, String endpoint, String query) throws IOException {
 
         this.job = job;
         this.endpoint = endpoint;
         this.query = query;
-        this.batchSize = batchSize;
         getResults();
+        batchSize = resultSize + 1;
 
     }
 
@@ -136,7 +136,7 @@ public class SPARQLQueryResultPreviewReader implements TableDataReader {
                 row = jsonRow.getValues();
             }
             List<Object> rowOfCells = new ArrayList<Object>(row.size());
-            
+
             while (start < row.size()) {
                 int end = start + columns.size() - 1;
                 for (int i = start; i <= end; i++) {
@@ -145,10 +145,10 @@ public class SPARQLQueryResultPreviewReader implements TableDataReader {
                 }
                 rowsOfCells.add(rowOfCells);
                 rowOfCells = new ArrayList<Object>(row.size());
-               start = end + 1;
+                start = end + 1;
             }
 
-       }
+        }
         end = jsonRows.size() < batchSize + 1;
         return rowsOfCells;
 
