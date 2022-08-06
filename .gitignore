@@ -9,3 +9,6 @@ test-output
 
 # dependencies pulled locally
 module/MOD-INF/lib/
+
+# Java classes
+module/MOD-INF/classes
