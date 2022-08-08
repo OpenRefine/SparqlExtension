@@ -1,15 +1,14 @@
+
 package org.openrefine.sparql.utils;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.Arrays;
 
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-
-import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
 import org.openrefine.extensions.sparql.utils.SPARQLQueryResultPreviewReader;
+import org.testng.Assert;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
@@ -23,18 +22,21 @@ import com.google.refine.io.FileProjectManager;
 import com.google.refine.model.ModelException;
 import com.google.refine.model.Project;
 
+import okhttp3.HttpUrl;
+import okhttp3.mockwebserver.MockResponse;
+import okhttp3.mockwebserver.MockWebServer;
+
 public class SPARQLQueryResultPreviewReaderTest {
 
     private static final String JSON_OPTION = "{\"mode\":\"row-based\"}}";
-    private static final String ENDPOINT = "https://dummy.endpoint.org/sparql";
-    private static final String QUERY = "dummy query";
+    private static final String ENDPOINT = "wdq/sparql";
+    private static final String QUERY = "SELECT ?item ?itemLabel \n"
+            + "WHERE \n"
+            + "{\n"
+            + "  ?item wdt:P31 wd:Q146. # Must be of a cat\n"
+            + "  SERVICE wikibase:label { bd:serviceParam wikibase:language \"en,en\". } # Helps get the label in your language, if not, then en language\n"
+            + "}";
     private static final int BATCH_SIZE = 100;
-
-    @Mock
-    private HttpServletRequest request;
-
-    @Mock
-    private HttpServletResponse response;
 
     // dependencies
     private Project project;
@@ -69,21 +71,32 @@ public class SPARQLQueryResultPreviewReaderTest {
 
         metadata.setName("SPARQL Import Test Project");
         ProjectManager.singleton.registerProject(project, metadata);
-        SUT = new SPARQLQueryResultPreviewReader(job, ENDPOINT, QUERY, BATCH_SIZE);
+
 
     }
 
     @AfterMethod
     public void tearDown() {
         SUT = null;
-        request = null;
-        response = null;
         project = null;
         metadata = null;
         job = null;
     }
 
-  @Test
-  public void f() {
-  }
+    @Test
+    public void testGetResults() throws Exception {
+        try (MockWebServer server = new MockWebServer()) {
+            String jsonResponse = "{\"head\":{\"vars\":[\"item\",\"itemLabel\"]},\"results\":{\"bindings\""
+                    + ":[{\"item\":{\"type\":\"uri\",\"value\":\"http://www.wikidata.org/entity/Q378619\"},\"itemLabel\""
+                    + ":{\"xml:lang\":\"en\",\"type\":\"literal\",\"value\":\"CC\"}},{\"item\":{\"type\":\"uri\",\"value\""
+                    + ":\"http://www.wikidata.org/entity/Q498787\"},\"itemLabel\":{\"xml:lang\":\"en\",\"type\":\"literal\",\"value\":\"Muezza\"}}]}}";
+            server.enqueue(new MockResponse().setBody(jsonResponse));
+            server.start();
+
+            HttpUrl url = server.url(ENDPOINT);
+            SUT = new SPARQLQueryResultPreviewReader(job, url.toString(), QUERY, BATCH_SIZE);
+            
+            Assert.assertEquals(SUT.getColumns(), Arrays.asList("item", "itemLabel"));
+        }
+    }
 }
