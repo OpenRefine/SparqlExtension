@@ -162,18 +162,4 @@
     </dependency>
   </dependencies>
 
-  <!-- enabled to access our snapshots of Wikidata-Toolkit -->
-  <repositories>
-    <repository>
-      <id>snapshots</id>
-      <url>https://oss.sonatype.org/content/repositories/snapshots/</url>
-      <releases>
-        <enabled>false</enabled>
-      </releases>
-      <snapshots>
-        <enabled>true</enabled>
-      </snapshots>
-    </repository>
-  </repositories>
-
 </project>
