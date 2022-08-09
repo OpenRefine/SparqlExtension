@@ -35,8 +35,6 @@ public class SPARQLImportingControllerTest {
 
     private static final String JSON_OPTION = "{\"mode\":\"row-based\"}}";
 
-    private String query;
-
     @Mock
     private HttpServletRequest request;
 
@@ -122,7 +120,7 @@ public class SPARQLImportingControllerTest {
                 "http://127.0.0.1:3333/command/core/importing-controller?controller=sparql/sparql-import-controller&subCommand=invalid-sub-command");
 
         when(response.getWriter()).thenReturn(pw);
-        // test
+
         SUT.doPost(request, response);
 
         String result = sw.getBuffer().toString().trim();
@@ -134,5 +132,24 @@ public class SPARQLImportingControllerTest {
         Assert.assertNotNull(message);
         Assert.assertEquals(code, "error");
         Assert.assertEquals(message, "No such sub command");
+    }
+
+    @Test
+    public void testDoPostInitializeParser() throws ServletException, IOException {
+
+        StringWriter sw = new StringWriter();
+        PrintWriter pw = new PrintWriter(sw);
+
+        when(request.getQueryString()).thenReturn(
+                "http://127.0.0.1:3333/command/core/importing-controller?controller=sparql/sparql-import-controller&subCommand=initialize-parser-ui");
+        when(response.getWriter()).thenReturn(pw);
+
+        SUT.doPost(request, response);
+
+        String result = sw.getBuffer().toString().trim();
+        ObjectNode json = ParsingUtilities.mapper.readValue(result, ObjectNode.class);
+
+        String status = json.get("status").asText();
+        Assert.assertEquals(status, "ok");
     }
 }
