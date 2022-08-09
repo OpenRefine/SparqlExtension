@@ -8,7 +8,7 @@
       </run>
     </groups>
     <packages>
-      <package name="org.openrefine.extensions.sparql.*" />
+      <package name="org.openrefine.sparql.*" />
     </packages>
   </test>
 </suite>
