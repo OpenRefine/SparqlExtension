@@ -8,6 +8,7 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 
+import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
@@ -111,5 +112,27 @@ public class SPARQLImportingControllerTest {
             // TODO Auto-generated catch block
             e.printStackTrace();
         }
+    }
+
+    @Test
+    public void testDoPostInvalidSubCommand() throws IOException, ServletException {
+        StringWriter sw = new StringWriter();
+        PrintWriter pw = new PrintWriter(sw);
+        when(request.getQueryString()).thenReturn(
+                "http://127.0.0.1:3333/command/core/importing-controller?controller=sparql/sparql-import-controller&subCommand=invalid-sub-command");
+
+        when(response.getWriter()).thenReturn(pw);
+        // test
+        SUT.doPost(request, response);
+
+        String result = sw.getBuffer().toString().trim();
+        ObjectNode json = ParsingUtilities.mapper.readValue(result, ObjectNode.class);
+
+        String code = json.get("status").asText();
+        String message = json.get("message").asText();
+        Assert.assertNotNull(code);
+        Assert.assertNotNull(message);
+        Assert.assertEquals(code, "error");
+        Assert.assertEquals(message, "No such sub command");
     }
 }
