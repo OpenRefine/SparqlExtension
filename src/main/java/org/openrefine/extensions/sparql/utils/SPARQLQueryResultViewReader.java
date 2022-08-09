@@ -182,4 +182,8 @@ public class SPARQLQueryResultViewReader implements TableDataReader {
         job.setProgress(percent, "Reading " + querySource);
     }
 
+    public List<String> getColumns() {
+        return columns;
+    }
+
 }

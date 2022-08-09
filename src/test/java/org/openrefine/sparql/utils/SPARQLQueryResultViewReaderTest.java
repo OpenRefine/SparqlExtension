@@ -9,7 +9,7 @@ import java.util.List;
 
 import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
-import org.openrefine.extensions.sparql.utils.SPARQLQueryResultPreviewReader;
+import org.openrefine.extensions.sparql.utils.SPARQLQueryResultViewReader;
 import org.testng.Assert;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
@@ -28,7 +28,7 @@ import okhttp3.HttpUrl;
 import okhttp3.mockwebserver.MockResponse;
 import okhttp3.mockwebserver.MockWebServer;
 
-public class SPARQLQueryResultPreviewReaderTest {
+public class SPARQLQueryResultViewReaderTest {
 
     private static final String ENDPOINT = "wdq/sparql";
     private static final String QUERY = "SELECT ?item ?itemLabel \n"
@@ -37,7 +37,6 @@ public class SPARQLQueryResultPreviewReaderTest {
             + "  ?item wdt:P31 wd:Q146. # Must be of a cat\n"
             + "  SERVICE wikibase:label { bd:serviceParam wikibase:language \"en,en\". } # Helps get the label in your language, if not, then en language\n"
             + "}";
-    private static final int BATCH_SIZE = 100;
 
     // dependencies
     private Project project;
@@ -46,7 +45,7 @@ public class SPARQLQueryResultPreviewReaderTest {
     private RefineServlet servlet;
 
     // System under test
-    private SPARQLQueryResultPreviewReader SUT = null;
+    private SPARQLQueryResultViewReader SUT = null;
 
     public static File createTempDirectory(String name)
             throws IOException {
@@ -73,7 +72,6 @@ public class SPARQLQueryResultPreviewReaderTest {
         metadata.setName("SPARQL Import Test Project");
         ProjectManager.singleton.registerProject(project, metadata);
 
-
     }
 
     @AfterMethod
@@ -95,12 +93,12 @@ public class SPARQLQueryResultPreviewReaderTest {
             server.start();
 
             HttpUrl url = server.url(ENDPOINT);
-            SUT = new SPARQLQueryResultPreviewReader(job, url.toString(), QUERY, BATCH_SIZE);
-            
+            SUT = new SPARQLQueryResultViewReader(job, url.toString(), QUERY);
+
             Assert.assertEquals(SUT.getColumns(), Arrays.asList("item", "itemLabel"));
         }
     }
-    
+
     @Test
     public void testGetNextRowOfCells() throws Exception {
         try (MockWebServer server = new MockWebServer()) {
@@ -112,8 +110,8 @@ public class SPARQLQueryResultPreviewReaderTest {
             server.start();
 
             HttpUrl url = server.url(ENDPOINT);
-            SUT = new SPARQLQueryResultPreviewReader(job, url.toString(), QUERY, BATCH_SIZE);
-            
+            SUT = new SPARQLQueryResultViewReader(job, url.toString(), QUERY);
+
             List<Object> currentRow = null;
             List<List<Object>> rows = new ArrayList<>();
             while ((currentRow = SUT.getNextRowOfCells()) != null) {
