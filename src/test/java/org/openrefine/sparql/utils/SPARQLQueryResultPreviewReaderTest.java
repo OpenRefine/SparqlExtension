@@ -3,7 +3,9 @@ package org.openrefine.sparql.utils;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 
 import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
@@ -97,6 +99,30 @@ public class SPARQLQueryResultPreviewReaderTest {
             SUT = new SPARQLQueryResultPreviewReader(job, url.toString(), QUERY, BATCH_SIZE);
             
             Assert.assertEquals(SUT.getColumns(), Arrays.asList("item", "itemLabel"));
+        }
+    }
+    
+    @Test
+    public void testGetNextRowOfCells() throws Exception {
+        try (MockWebServer server = new MockWebServer()) {
+            String jsonResponse = "{\"head\":{\"vars\":[\"item\",\"itemLabel\"]},\"results\":{\"bindings\""
+                    + ":[{\"item\":{\"type\":\"uri\",\"value\":\"http://www.wikidata.org/entity/Q378619\"},\"itemLabel\""
+                    + ":{\"xml:lang\":\"en\",\"type\":\"literal\",\"value\":\"CC\"}},{\"item\":{\"type\":\"uri\",\"value\""
+                    + ":\"http://www.wikidata.org/entity/Q498787\"},\"itemLabel\":{\"xml:lang\":\"en\",\"type\":\"literal\",\"value\":\"Muezza\"}}]}}";
+            server.enqueue(new MockResponse().setBody(jsonResponse));
+            server.start();
+
+            HttpUrl url = server.url(ENDPOINT);
+            SUT = new SPARQLQueryResultPreviewReader(job, url.toString(), QUERY, BATCH_SIZE);
+            
+            List<Object> currentRow = null;
+            List<List<Object>> rows = new ArrayList<>();
+            while ((currentRow = SUT.getNextRowOfCells()) != null) {
+                rows.add(currentRow);
+            }
+
+            Assert.assertEquals(rows.get(0), Arrays.asList("http://www.wikidata.org/entity/Q378619", "CC"));
+            Assert.assertEquals(rows.get(1), Arrays.asList("http://www.wikidata.org/entity/Q498787", "Muezza"));
         }
     }
 }
