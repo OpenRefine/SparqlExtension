@@ -297,13 +297,27 @@ Refine.SparqlPreviewTable.prototype._render = function() {
    */
 
   var trHead = table.insertRow(table.rows.length);
-  $(trHead.insertCell(0)).addClass("column-header").html('&nbsp;'); // index
 
-  var createColumnHeader = function(column) {
-    $(trHead.insertCell(trHead.cells.length))
-    .addClass("column-header")
-    .text(column.name);
+    DOM.bind(
+      $(trHead.appendChild(document.createElement("th")))
+      .attr("colspan", "1")
+      .addClass("column-header")
+      .html(
+        '<div class="column-header-title">' +
+          '<a class="column-header-title" ></a><span class="column-header-name">'+'&nbsp'+'</span>' +
+        '</div>'
+      )
+  );
+  this._columnHeaderUIs = [];
+  var createColumnHeader = function(column, index) {
+    var th = trHead.appendChild(document.createElement("th"));
+    $(th).addClass("column-header").attr('title', column.name);
+     
+      var columnHeaderUI = new SparqlDataTableColumnHeaderUI(column, index, th);
+      self._columnHeaderUIs.push(columnHeaderUI);
+    
   };
+  
   for (var i = 0; i < columns.length; i++) {
     createColumnHeader(columns[i], i);
   }
@@ -365,4 +379,29 @@ Refine.SparqlPreviewTable.prototype._render = function() {
     even = !even;
     renderRow(tr, r, row, even);
   }    
+};
+
+SparqlDataTableColumnHeaderUI= function(column, columnIndex, td) {
+  this._column = column;
+  this._columnIndex = columnIndex;
+  this._td = td;
+
+  this._render();
+};
+
+SparqlDataTableColumnHeaderUI.prototype.getColumn = function() {
+  return this._column;
+};
+
+SparqlDataTableColumnHeaderUI.prototype._render = function() {
+  var self = this;
+  var td = $(this._td);
+
+  td.html(DOM.loadHTML("sparql", "scripts/index/column-header.html"));
+  var elmts = DOM.bind(td);
+
+  elmts.nameContainer.text(this._column.name);
+  elmts.dropdownMenu.on('click',function() {
+    alert("Menu Test");
+  });
 };
