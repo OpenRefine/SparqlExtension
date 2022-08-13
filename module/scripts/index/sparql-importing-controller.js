@@ -102,24 +102,18 @@ Refine.SPARQLImportingController.prototype._showParsingPanel = function() {
       var width = self._parsingPanel.width();
       var height = self._parsingPanel.height();
       var headerHeight = elmts.wizardHeader.outerHeight(true);
-      var controlPanelHeight = 250;
 
       elmts.dataPanel
       .css("left", "0px")
       .css("top", headerHeight + "px")
       .css("width", (width - DOM.getHPaddings(elmts.dataPanel)) + "px")
-      .css("height", (height - headerHeight - controlPanelHeight - DOM.getVPaddings(elmts.dataPanel)) + "px");
+      .css("height", (height - headerHeight - DOM.getVPaddings(elmts.dataPanel)) + "px");
       elmts.progressPanel
       .css("left", "0px")
       .css("top", headerHeight + "px")
       .css("width", (width - DOM.getHPaddings(elmts.progressPanel)) + "px")
-      .css("height", (height - headerHeight - controlPanelHeight - DOM.getVPaddings(elmts.progressPanel)) + "px");
-
-      elmts.controlPanel
-      .css("left", "0px")
-      .css("top", (height - controlPanelHeight) + "px")
-      .css("width", (width - DOM.getHPaddings(elmts.controlPanel)) + "px")
-      .css("height", (controlPanelHeight - DOM.getVPaddings(elmts.controlPanel)) + "px");
+      .css("height", (height - headerHeight - DOM.getVPaddings(elmts.progressPanel)) + "px");
+      
     };
 
     $(window).on('resize',this._parsingPanelResizer);
@@ -136,30 +130,9 @@ Refine.SPARQLImportingController.prototype._showParsingPanel = function() {
     });
     
     this._parsingPanelElmts.createProjectButton.on('click',function() { self._createProject(); });
-
-    // If disableAutoPreviewCheckbox is not checked, we will schedule an automatic update
-    var onChange = function() {
-        self._scheduleUpdatePreview();
-    };
-    this._parsingPanel.find("input").on("change", onChange);
-    this._parsingPanel.find("select").on("change", onChange);
-
     this._createProjectUI.showCustomPanel(this._parsingPanel);
     this._updatePreview();
 };
-
-Refine.SPARQLImportingController.prototype._scheduleUpdatePreview = function() {
-    if (this._timerID != null) {
-      window.clearTimeout(this._timerID);
-      this._timerID = null;
-    }
-
-    var self = this;
-    this._timerID = window.setTimeout(function() {
-      self._timerID = null;
-      self._updatePreview();
-    }, 500); // 0.5 second
-  };
 
 Refine.SPARQLImportingController.prototype._updatePreview = function() {
     var self = this;
@@ -185,7 +158,7 @@ Refine.SPARQLImportingController.prototype._updatePreview = function() {
                 self._parsingPanelElmts.progressPanel.hide();
                 self._parsingPanelElmts.dataPanel.show();
 
-                new Refine.PreviewTable(projectData, self._parsingPanelElmts.dataPanel.off().empty());
+                new Refine.SparqlPreviewTable(projectData, self._parsingPanelElmts.dataPanel.off().empty());
             });
             } else {
 
@@ -303,4 +276,92 @@ Refine.SPARQLImportingController.prototype._createProject = function() {
         "json"
     );
   });
+};
+
+Refine.SparqlPreviewTable = function(projectData, elmt) {
+  this._projectData = projectData;
+  this._elmt = elmt;
+  this._render();
+};
+
+Refine.SparqlPreviewTable.prototype._render = function() {
+  var self = this;
+  var table = $('<table>').addClass("data-table").appendTo(this._elmt)[0];
+
+  var columns = this._projectData.columnModel.columns;
+
+  /*------------------------------------------------------------
+   *  Column Headers
+   *------------------------------------------------------------
+   */
+
+  var trHead = table.insertRow(table.rows.length);
+  $(trHead.insertCell(0)).addClass("column-header").html('&nbsp;'); // index
+
+  var createColumnHeader = function(column) {
+    $(trHead.insertCell(trHead.cells.length))
+    .addClass("column-header")
+    .text(column.name);
+  };
+  for (var i = 0; i < columns.length; i++) {
+    createColumnHeader(columns[i], i);
+  }
+
+  /*------------------------------------------------------------
+   *  Data Cells
+   *------------------------------------------------------------
+   */
+
+  var rows = this._projectData.rowModel.rows;
+  var renderRow = function(tr, r, row, even) {
+    $(tr).addClass(even ? "even" : "odd");
+
+    var cells = row.cells;
+    var tdIndex = tr.insertCell(tr.cells.length);
+    $('<div></div>').html((row.i + 1) + ".").appendTo(tdIndex);
+
+    for (var i = 0; i < columns.length; i++) {
+      var column = columns[i];
+      var td = tr.insertCell(tr.cells.length);
+      var divContent = $('<div/>').addClass("data-table-cell-content").appendTo(td);
+
+      var cell = (column.cellIndex < cells.length) ? cells[column.cellIndex] : null;
+      if (!cell || ("v" in cell && cell.v === null)) {
+        $('<span>').html("&nbsp;").appendTo(divContent);
+      } else if ("e" in cell) {
+        $('<span>').addClass("data-table-error").text(cell.e).appendTo(divContent);
+      } else {
+        if ("r" in cell && cell.ri !== null) {
+          $('<a>')
+          .attr("href", "#") // we don't have access to the reconciliation data here
+          .text(cell.v)
+          .appendTo(divContent);
+        } else if (typeof cell.v !== "string") {
+          if (typeof cell.v == "number") {
+            divContent.addClass("data-table-cell-content-numeric");
+          }
+          $('<span>')
+          .addClass("data-table-value-nonstring")
+          .text(cell.v)
+          .appendTo(divContent);
+        } else if (URL.looksLikeUrl(cell.v)) {
+          $('<a>')
+          .text(cell.v)
+          .attr("href", cell.v)
+          .attr("target", "_blank")
+          .appendTo(divContent);
+        } else {
+          $('<span>').text(cell.v).appendTo(divContent);
+        }
+      }
+    }
+  };
+
+  var even = true;
+  for (var r = 0; r < rows.length; r++) {
+    var row = rows[r];
+    var tr = table.insertRow(table.rows.length);
+    even = !even;
+    renderRow(tr, r, row, even);
+  }    
 };
