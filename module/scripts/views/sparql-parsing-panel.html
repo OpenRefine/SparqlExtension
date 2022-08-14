@@ -1,0 +1,18 @@
+<div bind="wizardHeader" class="sparql-importing-wizard-header">	
+  <div class="grid-layout layout-tightest layout-full">
+    <table>
+      <tr>
+        <td width="1%"><button bind="startOverButton" class="button">&laquo; Start Over</button></td>
+        <td width="98%" bind="sparql_conf_pars"></td>
+        <td style="text-align: right;" bind="sparql_proj_name"></td>
+        <td width="1%"><input spellcheck="false" class="inline" type="text" size="30" bind="projectNameInput" /></td>
+        <td width="1%"><button bind="createProjectButton" class="button button-primary"></button></td>
+      </tr>	
+    </table>	
+  </div>	
+</div>
+<div bind="dataPanel" class="sparql-importing-parsing-data-panel"></div>
+<div bind="progressPanel" class="sparql-importing-progress-data-panel">
+    <img src="images/large-spinner.gif" /> 
+    <span bind="sparql_updating"></span>
+</div>

@@ -7,7 +7,7 @@ Refine.SPARQLSourceUI.prototype.attachUI = function(body) {
   var self = this;
   this._body = body;
   
-  this._body.html(DOM.loadHTML("sparql", "scripts/index/import-from-sparql-form.html"));
+  this._body.html(DOM.loadHTML("sparql", "scripts/views/import-from-sparql-form.html"));
   this._elmts = DOM.bind(this._body);
   
   $('#sparql-endpoint').text($.i18n('sparql-import/endpoint-label'));

@@ -84,7 +84,7 @@ Refine.SPARQLImportingController.prototype._showParsingPanel = function() {
   var self = this;
   
   this._parsingPanel.off().empty().html(
-      DOM.loadHTML("sparql", "scripts/index/sparql-parsing-panel.html"));
+      DOM.loadHTML("sparql", "scripts/views/sparql-parsing-panel.html"));
       
   this._parsingPanelElmts = DOM.bind(this._parsingPanel);
 
@@ -396,11 +396,52 @@ SparqlDataTableColumnHeaderUI.prototype._render = function() {
   var self = this;
   var td = $(this._td);
 
-  td.html(DOM.loadHTML("sparql", "scripts/index/column-header.html"));
+  td.html(DOM.loadHTML("sparql", "scripts/views/column-header.html"));
   var elmts = DOM.bind(td);
 
   elmts.nameContainer.text(this._column.name);
+  
   elmts.dropdownMenu.on('click',function() {
-    alert("Menu Test");
+    var frame = DialogSystem.createDialog();
+    frame.width("400px");
+    
+    var header = $('<div></div>').addClass("dialog-header").text($.i18n('sparql-views/use-values-as-identifiers/header')).appendTo(frame)
+    var body = $('<div></div>').addClass("dialog-body").appendTo(frame);
+    var footer = $('<div></div>').addClass("dialog-footer").appendTo(frame);
+    
+    $('<p></p>').text($.i18n('sparql-views/choose-reconciliation-service')).appendTo(body);
+    var select = $('<select></select>').appendTo(body);
+    var services = ReconciliationManager.getAllServices();
+    for (var i = 0; i < services.length; i++) {
+        var service = services[i];
+        $('<option></option>').val(service.url)
+           .text(service.name)
+           .appendTo(select);
+    }
+           
+    $('<button class="button"></button>').text($.i18n('sparql-buttons/cancel')).on('click',function() {
+      DialogSystem.dismissUntil(level - 1);
+    }).appendTo(footer);
+        $('<button class="button"></button>').html($.i18n('sparql-buttons/ok')).on('click',function() {
+        
+        var service = select.val();
+        var identifierSpace = null;
+        var schemaSpace = null;
+        for(var i = 0; i < services.length; i++) {
+           if(services[i].url === service) {
+              identifierSpace = services[i].identifierSpace;
+              schemaSpace = services[i].schemaSpace;
+           }
+        }
+        if (identifierSpace === null) {
+            alert($.i18n('sparql-views/choose-reconciliation-service-alert'));
+        } else {
+          
+           
+       }
+       DialogSystem.dismissUntil(level - 1);
+    }).appendTo(footer);
+   
+    var level = DialogSystem.showDialog(frame);
   });
 };
