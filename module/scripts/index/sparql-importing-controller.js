@@ -18,6 +18,11 @@ $.ajax({
 $.i18n().load(dictionary, lang);
 // End internationalization
 
+var columnNames = [];
+var reconServices = [];
+var schemaSpaces = [];
+var identifierSpaces = [];
+
 Refine.SPARQLImportingController = function(createProjectUI) {
   this._createProjectUI = createProjectUI;
   
@@ -75,6 +80,10 @@ Refine.SPARQLImportingController.prototype.getOptions = function() {
   var options = {
     endpoint: this._doc.endpoint,
     query: this._doc.query,
+    columnNames: columnNames ,
+    reconServices:reconServices,
+    schemaSpaces:schemaSpaces,
+    identifierSpaces:identifierSpaces,
   };
 
   return options;
@@ -424,18 +433,27 @@ SparqlDataTableColumnHeaderUI.prototype._render = function() {
     }).appendTo(footer);
         $('<button class="button"></button>').html($.i18n('sparql-buttons/ok')).on('click',function() {
         
-        var service = select.val();
+        var reconService = select.val();
         var identifierSpace = null;
         var schemaSpace = null;
         for(var i = 0; i < services.length; i++) {
-           if(services[i].url === service) {
+           if(services[i].url === reconService) {
               identifierSpace = services[i].identifierSpace;
               schemaSpace = services[i].schemaSpace;
            }
         }
         if (identifierSpace === null) {
             alert($.i18n('sparql-views/choose-reconciliation-service-alert'));
-        } else {
+		} else {
+			if (!columnNames.includes(self.getColumn().name)) {
+				columnNames.push(self.getColumn().name);
+				reconServices.push(reconService);
+				schemaSpaces.push(schemaSpace);
+				identifierSpaces.push(identifierSpace);
+
+			} else {
+				alert($.i18n('sparql-views/reconciliation-service-already-chosen-alert'));
+			}
           
            
        }

@@ -16,6 +16,7 @@
     "sparql-parsing/updating-preview": "Updating preview …",
     "sparql-parsing/option": "Options",
     "sparql-views/use-values-as-identifiers/header": "Use values as identifiers",
-    "sparql-views/choose-reconciliation-service":"Choose a reconciliation service",
-    "sparql-views/choose-reconciliation-service-alert":"Please choose a reconciliation service first."
+    "sparql-views/choose-reconciliation-service": "Choose a reconciliation service",
+    "sparql-views/choose-reconciliation-service-alert": "Please choose a reconciliation service first.",
+    "sparql-views/reconciliation-service-already-chosen-alert": "Reconciliation service is already chosen."
 }
