@@ -185,7 +185,7 @@ public class SPARQLImportingController implements ImportingController {
             ObjectNode options,
             List<Exception> exceptions) throws IOException {
 
-        JSONUtilities.safePut(options, "headerLines", 0);
+        JSONUtilities.safePut(options, "headerLines", 1);
         String endpoint = options.get("endpoint").asText();
         String query = options.get("query").asText();
 
@@ -277,7 +277,7 @@ public class SPARQLImportingController implements ImportingController {
             ObjectNode options,
             List<Exception> exceptions) throws IOException {
 
-        JSONUtilities.safePut(options, "headerLines", 0);
+        JSONUtilities.safePut(options, "headerLines", 1);
         String endpoint = options.get("endpoint").asText();
         String query = options.get("query").asText();
 
