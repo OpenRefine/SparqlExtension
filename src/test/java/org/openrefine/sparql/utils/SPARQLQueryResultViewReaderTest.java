@@ -118,8 +118,8 @@ public class SPARQLQueryResultViewReaderTest {
                 rows.add(currentRow);
             }
 
-            Assert.assertEquals(rows.get(0), Arrays.asList("http://www.wikidata.org/entity/Q378619", "CC"));
-            Assert.assertEquals(rows.get(1), Arrays.asList("http://www.wikidata.org/entity/Q498787", "Muezza"));
+            Assert.assertEquals(rows.get(0), Arrays.asList("item", "itemLabel"));
+            Assert.assertEquals(rows.get(1), Arrays.asList("http://www.wikidata.org/entity/Q378619", "CC"));
         }
     }
 }

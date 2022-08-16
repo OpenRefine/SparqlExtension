@@ -42,6 +42,7 @@ public class SPARQLQueryResultPreviewReader implements TableDataReader {
     private List<String> columns = new ArrayList<String>();
     private JsonNode firstEntry;
     private List<JsonColumn> jsonColumns = new ArrayList<JsonColumn>();
+    private boolean usedHeaders = false;
 
     public SPARQLQueryResultPreviewReader(ImportingJob job, String endpoint, String query, int batchSize) throws IOException {
 
@@ -83,6 +84,16 @@ public class SPARQLQueryResultPreviewReader implements TableDataReader {
 
     @Override
     public List<Object> getNextRowOfCells() throws IOException {
+
+        if (!usedHeaders) {
+            List<Object> row = new ArrayList<Object>(columns.size());
+            for (String columnName : columns) {
+                row.add(columnName);
+            }
+            usedHeaders = true;
+
+            return row;
+        }
 
         if (rowsOfCells == null || (nextRow >= batchRowStart + rowsOfCells.size() && !end)) {
             int newBatchRowStart = batchRowStart + (rowsOfCells == null ? 0 : rowsOfCells.size());
