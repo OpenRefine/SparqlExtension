@@ -42,6 +42,7 @@ public class SPARQLQueryResultViewReader implements TableDataReader {
     private List<String> columns = new ArrayList<String>();
     private JsonNode firstEntry;
     private List<JsonColumn> jsonColumns = new ArrayList<JsonColumn>();
+    private List<String> columnNames = new ArrayList<String>();
     private boolean usedHeaders = false;
 
     public SPARQLQueryResultViewReader(ImportingJob job, String endpoint, String query) throws IOException {
@@ -69,6 +70,7 @@ public class SPARQLQueryResultViewReader implements TableDataReader {
         firstEntry = results.get(0);
         Iterator<String> iterator = firstEntry.fieldNames();
         iterator.forEachRemaining(e -> columns.add(e));
+        iterator.forEachRemaining(e -> columnNames.add(e));
         jsonColumns.add(new JsonColumn(columns));
 
         for (int i = 0; i < resultSize; i++) {
