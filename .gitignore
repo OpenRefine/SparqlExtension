@@ -8,10 +8,10 @@ target/
 test-output
 
 # dependencies pulled locally
-module/MOD-INF/lib/
+module/MOD-INF/lib/**
 
 # Java classes
-module/MOD-INF/classes
+module/MOD-INF/classes/**
 
 .idea/
 *.log
